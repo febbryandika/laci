@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Swift Package Manager
+.swiftpm/
+Packages/*/.build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Secrets and signing
+*.mobileprovision
+*.p12
+.env
+
+# Local-only docs
+SPEC.md
+CLAUDE.md
