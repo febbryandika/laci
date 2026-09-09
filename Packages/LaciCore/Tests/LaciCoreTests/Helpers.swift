@@ -28,3 +28,14 @@ struct TestStore {
         container = try ModelContainer(for: schema, configurations: [configuration])
     }
 }
+
+/// A product with sensible defaults; tests override only what they assert on.
+func makeProduct(
+    _ sku: String, name: String? = nil, tracksStock: Bool = true, stockOnHand: Decimal = 0,
+    cost: Decimal = 1000, price: Decimal = 1500
+) -> Product {
+    Product(
+        sku: sku, name: name ?? "Item \(sku)", unit: "pcs", cost: cost, price: price,
+        tracksStock: tracksStock, stockOnHand: stockOnHand, updatedAt: Date(timeIntervalSince1970: 0)
+    )
+}
