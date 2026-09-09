@@ -32,6 +32,9 @@ struct SellView: View {
     var body: some View {
         NavigationStack {
             List {
+                if let openPriorDay = viewModel.openPriorDay {
+                    openDaySection(openPriorDay)
+                }
                 searchSection
                 if !viewModel.query.isEmpty {
                     resultsSection
@@ -41,6 +44,14 @@ struct SellView: View {
             }
             .navigationTitle("Jual")
             .toolbar {
+                ToolbarItem {
+                    NavigationLink {
+                        CloseOutView(dependencies: dependencies)
+                    } label: {
+                        Label("Tutup kas", systemImage: "tray.and.arrow.down")
+                    }
+                    .accessibilityIdentifier("SellView.closeOut")
+                }
                 ToolbarItem {
                     NavigationLink {
                         SalesHistoryView(dependencies: dependencies)
@@ -59,6 +70,20 @@ struct SellView: View {
                 }
             }
             .task { viewModel.loadCatalogue() }
+            // `onAppear`, not `task`: coming back from the close-out screen must drop the banner.
+            .onAppear { viewModel.refreshCloseOutStatus() }
+        }
+    }
+
+    /// SPEC §3.3.5: a day with no close-out stays open and banners on launch.
+    private func openDaySection(_ day: Date) -> some View {
+        Section {
+            NavigationLink {
+                CloseOutView(dependencies: dependencies)
+            } label: {
+                Label("Hari \(day.formatted(DateFormat.day)) belum ditutup", systemImage: "exclamationmark.triangle")
+            }
+            .accessibilityIdentifier("SellView.openDay")
         }
     }
 
