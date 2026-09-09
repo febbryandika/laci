@@ -21,4 +21,14 @@ final class LaunchTests: XCTestCase {
         history.tap()
         XCTAssertTrue(app.navigationBars["Riwayat"].waitForExistence(timeout: 5))
     }
+
+    @MainActor
+    func testCloseOutIsReachableFromSell() {
+        let app = XCUIApplication()
+        app.launch()
+        let closeOut = app.buttons["SellView.closeOut"]
+        XCTAssertTrue(closeOut.waitForExistence(timeout: 5))
+        closeOut.tap()
+        XCTAssertTrue(app.navigationBars["Tutup kas"].waitForExistence(timeout: 5))
+    }
 }

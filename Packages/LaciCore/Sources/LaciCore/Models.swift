@@ -2,14 +2,15 @@ import Foundation
 import SwiftData
 
 /// Schema V1 is what ships to TestFlight (SPEC §4). Every later change gets a new `VersionedSchema`
-/// and a `MigrationStage`; the six classes are declared exactly as the SPEC lists them.
+/// and a `MigrationStage`; until then V1 is edited in place. `Payout` and `CloseOut.cashRefunds` were
+/// added in Phase 6 for SPEC §3.3.4 and §8.4.
 public enum SchemaV1: VersionedSchema {
     public static var versionIdentifier: Schema.Version {
         Schema.Version(1, 0, 0)
     }
 
     public static var models: [any PersistentModel.Type] {
-        [Product.self, Barcode.self, Sale.self, SaleLine.self, StockMovement.self, CloseOut.self]
+        [Product.self, Barcode.self, Sale.self, SaleLine.self, StockMovement.self, CloseOut.self, Payout.self]
     }
 
     @Model public final class Product {
@@ -142,7 +143,8 @@ public enum SchemaV1: VersionedSchema {
         @Attribute(.unique) public var tradingDay: Date
         public var openingFloat: Decimal
         public var cashSales: Decimal
-        public var payouts: Decimal
+        public var cashRefunds: Decimal = 0 // DrawerInputs.cashRefunds; a default so V1 rows stay readable
+        public var payouts: Decimal // Σ payouts that went into reconcile, not the closing setoran
         public var expectedDrawer: Decimal
         public var countedDrawer: Decimal
         public var discrepancy: Decimal // counted − expected; stored, never recomputed
@@ -151,12 +153,14 @@ public enum SchemaV1: VersionedSchema {
         public var attribution: String? // §10: "operator" | "bug" | "unresolved"
 
         public init(
-            tradingDay: Date, openingFloat: Decimal, cashSales: Decimal, payouts: Decimal, expectedDrawer: Decimal,
-            countedDrawer: Decimal, discrepancy: Decimal, note: String?, closedAt: Date, attribution: String?
+            tradingDay: Date, openingFloat: Decimal, cashSales: Decimal, cashRefunds: Decimal, payouts: Decimal,
+            expectedDrawer: Decimal, countedDrawer: Decimal, discrepancy: Decimal, note: String?, closedAt: Date,
+            attribution: String?
         ) {
             self.tradingDay = tradingDay
             self.openingFloat = openingFloat
             self.cashSales = cashSales
+            self.cashRefunds = cashRefunds
             self.payouts = payouts
             self.expectedDrawer = expectedDrawer
             self.countedDrawer = countedDrawer
@@ -164,6 +168,24 @@ public enum SchemaV1: VersionedSchema {
             self.note = note
             self.closedAt = closedAt
             self.attribution = attribution
+        }
+    }
+
+    /// Cash that left the drawer other than as change (SPEC §3.3.4, §8.4): a supplier paid from the
+    /// till, petty cash, or a setoran. The closing setoran is one of these, dated `CloseOut.closedAt`.
+    @Model public final class Payout {
+        public var tradingDay: Date
+        public var kindRaw: String // "supplier" | "petty_cash" | "setoran"
+        public var amount: Decimal
+        public var note: String
+        public var occurredAt: Date
+
+        public init(tradingDay: Date, kind: PayoutKind, amount: Decimal, note: String, occurredAt: Date) {
+            self.tradingDay = tradingDay
+            kindRaw = kind.rawValue
+            self.amount = amount
+            self.note = note
+            self.occurredAt = occurredAt
         }
     }
 }
@@ -174,3 +196,4 @@ public typealias Sale = SchemaV1.Sale
 public typealias SaleLine = SchemaV1.SaleLine
 public typealias StockMovement = SchemaV1.StockMovement
 public typealias CloseOut = SchemaV1.CloseOut
+public typealias Payout = SchemaV1.Payout

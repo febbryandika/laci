@@ -19,4 +19,12 @@ public struct TradingDay: Hashable, Sendable {
         guard calendar.component(.hour, from: date) < cutoverHour else { return start }
         return calendar.date(byAdding: .day, value: -1, to: start) ?? start
     }
+
+    /// The trading day after `day` (a bucket from `bucket(for:timeZone:)`), for the close-out
+    /// sequence: the day after the last close-out is the next one that must be closed.
+    public func next(after day: Date, timeZone: TimeZone) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return calendar.date(byAdding: .day, value: 1, to: day) ?? day
+    }
 }

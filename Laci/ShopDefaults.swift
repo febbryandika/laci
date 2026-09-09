@@ -13,4 +13,6 @@ enum ShopDefaults {
     static let taxPolicy = TaxPolicy.nonPKP
     /// On-screen money is Indonesian regardless of the device locale (SPEC §9).
     static let locale = Locale(identifier: "id_ID")
+    /// A close-out discrepancy beyond this needs a note before it can be saved (SPEC §3.3.3).
+    static let discrepancyThreshold = Money(5000)
 }

@@ -6,6 +6,8 @@ public enum CoreError: Error, Hashable, Sendable {
     case productNotFound(sku: String)
     case barcodeTaken(value: String, existingSKU: String)
     case dayAlreadyClosed(tradingDay: Date)
+    /// Attribution is set on a saved close-out; there is nothing to attribute before one exists.
+    case closeOutNotFound(tradingDay: Date)
     case emptySale
     /// The cash settlement was computed for a different total than the draft carries.
     case settlementMismatch

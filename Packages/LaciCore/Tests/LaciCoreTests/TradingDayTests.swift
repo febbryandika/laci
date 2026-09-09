@@ -47,4 +47,13 @@ struct TradingDayTests {
         #expect(jst == expectedJST)
         #expect(wib != jst)
     }
+
+    @Test("The next trading day is the following calendar day in the shop zone", arguments: [
+        (9, 9, 9, 10), (9, 30, 10, 1),
+    ])
+    func nextDay(month: Int, day: Int, expectedMonth: Int, expectedDay: Int) throws {
+        let today = try Self.date(2026, month, day, in: Self.jakarta)
+        let expected = try Self.date(2026, expectedMonth, expectedDay, in: Self.jakarta)
+        #expect(TradingDay(cutoverHour: 4).next(after: today, timeZone: Self.jakarta) == expected)
+    }
 }

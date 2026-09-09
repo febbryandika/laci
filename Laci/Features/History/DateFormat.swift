@@ -8,6 +8,11 @@ enum DateFormat {
     static let dateTime = Date.FormatStyle(
         date: .abbreviated, time: .shortened, locale: ShopDefaults.locale, timeZone: ShopDefaults.timeZone
     )
+
+    /// A trading day: the date alone, in the shop's zone.
+    static let day = Date.FormatStyle(
+        date: .long, time: .omitted, locale: ShopDefaults.locale, timeZone: ShopDefaults.timeZone
+    )
 }
 
 extension Sale {
