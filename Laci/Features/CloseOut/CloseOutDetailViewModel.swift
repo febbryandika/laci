@@ -9,6 +9,8 @@ import Observation
 final class CloseOutDetailViewModel {
     let tradingDay: Date
     private(set) var closeOut: CloseOut?
+    /// Every payout on the day, the closing setoran included, oldest first.
+    private(set) var payouts: [Payout] = []
     private(set) var failed = false
 
     private let closeOuts: any CloseOutRepository
@@ -21,8 +23,10 @@ final class CloseOutDetailViewModel {
     func load() {
         do {
             closeOut = try closeOuts.closeOut(on: tradingDay)
+            payouts = try closeOuts.payouts(on: tradingDay)
         } catch {
             closeOut = nil
+            payouts = []
             failed = true
         }
     }

@@ -39,6 +39,13 @@ struct CloseOutDetailView: View {
                     .foregroundStyle(closeOut.discrepancy < 0 ? .red : .primary)
                     .bold()
             }
+            if !viewModel.payouts.isEmpty {
+                Section("Pengeluaran kas") {
+                    ForEach(viewModel.payouts, id: \.persistentModelID) { payout in
+                        PayoutRow(payout: payout)
+                    }
+                }
+            }
             if let note = closeOut.note {
                 Section("Catatan") { Text(note) }
             }

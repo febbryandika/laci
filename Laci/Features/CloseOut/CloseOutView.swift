@@ -159,7 +159,7 @@ struct CloseOutView: View {
                 .accessibilityIdentifier("CloseOutView.save")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Selisih lebih dari \(Self.threshold) wajib diberi catatan.")
+                Text("Selisih lebih dari \(thresholdText) wajib diberi catatan.")
                 Text("Setoran dicatat sebagai pengeluaran; modal awal besok adalah uang dihitung dikurangi setoran.")
             }
         }
@@ -181,7 +181,9 @@ struct CloseOutView: View {
         }
     }
 
-    private static let threshold = ShopDefaults.discrepancyThreshold.amount.formatted(MoneyFormat.rupiah)
+    private var thresholdText: Text {
+        Text(ShopDefaults.discrepancyThreshold.amount, format: MoneyFormat.rupiah)
+    }
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Money) -> some View {
         LabeledContent(label) {
@@ -204,7 +206,7 @@ struct CloseOutView: View {
     }
 }
 
-private struct PayoutRow: View {
+struct PayoutRow: View {
     let payout: Payout
 
     var body: some View {

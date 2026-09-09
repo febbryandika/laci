@@ -11,9 +11,12 @@ struct CloseOutDetailViewModelTests {
 
     init() throws {
         fixture = try CloseOutFixture()
-        let closing = fixture.closeOutViewModel()
-        fixture.count(closing, counted: "200000")
-        closing.save(note: "", cashRemovedText: "")
+        let midday = fixture.closeOutViewModel()
+        midday.addPayout(kind: .pettyCash, amountText: "5000", note: "plastik")
+        // Closed an hour later, so the setoran sorts after the mid-day payout.
+        let closing = fixture.closeOutViewModel(now: CloseOutFixture.now.addingTimeInterval(3600))
+        fixture.count(closing, counted: "195000")
+        closing.save(note: "", cashRemovedText: "150000")
     }
 
     func detail(of day: Date? = nil) -> CloseOutDetailViewModel {
@@ -29,6 +32,14 @@ struct CloseOutDetailViewModelTests {
         #expect(viewModel.closeOut?.discrepancy == 0)
         #expect(viewModel.closeOut?.attributionKind == nil)
         #expect(!viewModel.failed)
+    }
+
+    @Test("The day's payouts are listed, the closing setoran last")
+    func payoutsListed() {
+        let viewModel = detail()
+        #expect(viewModel.payouts.map(\.kind) == [.pettyCash, .setoran])
+        #expect(viewModel.payouts.map(\.amount) == [5000, 150_000])
+        #expect(viewModel.closeOut?.payouts == 5000)
     }
 
     @Test("A day that was never closed loads as nothing")
