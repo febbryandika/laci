@@ -11,4 +11,14 @@ final class LaunchTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.textFields["SellView.search"].waitForExistence(timeout: 5))
     }
+
+    @MainActor
+    func testHistoryIsReachableFromSell() {
+        let app = XCUIApplication()
+        app.launch()
+        let history = app.buttons["SellView.history"]
+        XCTAssertTrue(history.waitForExistence(timeout: 5))
+        history.tap()
+        XCTAssertTrue(app.navigationBars["Riwayat"].waitForExistence(timeout: 5))
+    }
 }
