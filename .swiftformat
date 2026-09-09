@@ -1,0 +1,8 @@
+# SwiftFormat. CI runs `swiftformat --lint .` with the runner's preinstalled SwiftFormat.
+# Near-default on purpose; the Swift version is pinned so rule selection does not depend
+# on which toolchain or SwiftFormat build is present.
+--swiftversion 6.0
+--indent 4
+--commas always
+--header ignore
+--exclude .build,build,DerivedData,Packages/*/.build,**/.build

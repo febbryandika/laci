@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+
+jobs:
+  packages:
+    name: swift test (${{ matrix.package }})
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [LaciMoney, LaciPrint, LaciCore]
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift build --package-path Packages/${{ matrix.package }}
+      - run: swift test --package-path Packages/${{ matrix.package }}
+
+  money-imports:
+    name: LaciMoney imports only Foundation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/assert-money-imports.sh
+
+  lint:
+    name: SwiftLint + SwiftFormat
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install swiftlint
+      - run: swiftlint version && swiftformat --version
+      - run: swiftformat --lint .
+      - run: swiftlint lint --strict
+
+  app:
+    name: xcodebuild test (iOS Simulator)
+    runs-on: macos-26
+    env:
+      DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.5
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version
+      - run: xcrun simctl list devices available
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -project Laci.xcodeproj -scheme Laci \
+            -destination "$DESTINATION" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+      - name: Test without building
+        run: |
+          xcodebuild test-without-building \
+            -project Laci.xcodeproj -scheme Laci \
+            -destination "$DESTINATION" \
+            -derivedDataPath DerivedData \
+            -parallel-testing-enabled NO \
+            -resultBundlePath build/TestResults.xcresult
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: TestResults.xcresult
+          path: build/TestResults.xcresult
