@@ -9,4 +9,12 @@ public enum CoreError: Error, Hashable, Sendable {
     case emptySale
     /// The cash settlement was computed for a different total than the draft carries.
     case settlementMismatch
+    case saleNotFound(id: UUID)
+    /// Void and refund both refuse a voided sale.
+    case saleAlreadyVoided(id: UUID)
+    case voidReasonRequired
+    /// A sale with a non-voided refund can be neither voided nor refunded again.
+    case saleHasLiveRefund(id: UUID)
+    /// A refund is corrected by voiding it, never by refunding it.
+    case saleIsRefund(id: UUID)
 }

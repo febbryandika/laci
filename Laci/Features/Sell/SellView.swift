@@ -20,10 +20,12 @@ struct SellView: View {
         }
     }
 
+    private let dependencies: Dependencies
     @State private var viewModel: SellViewModel
     @State private var sheet: Sheet?
 
     init(dependencies: Dependencies) {
+        self.dependencies = dependencies
         _viewModel = State(initialValue: SellViewModel(dependencies: dependencies))
     }
 
@@ -38,6 +40,16 @@ struct SellView: View {
                 totalsSection
             }
             .navigationTitle("Jual")
+            .toolbar {
+                ToolbarItem {
+                    NavigationLink {
+                        SalesHistoryView(dependencies: dependencies)
+                    } label: {
+                        Label("Riwayat", systemImage: "clock")
+                    }
+                    .accessibilityIdentifier("SellView.history")
+                }
+            }
             .safeAreaInset(edge: .bottom) { payButton }
             .sheet(item: $sheet) { sheet in
                 switch sheet {

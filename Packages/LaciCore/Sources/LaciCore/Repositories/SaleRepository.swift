@@ -42,8 +42,20 @@ public protocol SaleRepository: AnyObject {
     /// day is bucketed here, once, and stored.
     func commit(_ draft: SaleDraft, tradingDay: TradingDay, timeZone: TimeZone) throws -> Sale
     func sale(id: UUID) throws -> Sale?
+    func sale(number: Int) throws -> Sale?
     /// By sale number.
     func sales(on tradingDay: Date, limit: Int) throws -> [Sale]
+    /// Newest first, keyset-paged: the sales numbered below `number`, or the newest when nil.
+    func recent(before number: Int?, limit: Int) throws -> [Sale]
+    /// The non-voided refunds of a sale, by number.
+    func refunds(of saleID: UUID) throws -> [Sale]
+    /// Marks the sale and reverses its stock movements with reason `void` in one transaction
+    /// (SPEC §3.1.6). Nothing is deleted; the void fields are the only mutation a committed sale
+    /// ever receives.
+    func void(saleID: UUID, reason: String, occurredAt: Date) throws
+    /// A new sale linked through `refundsSaleID` with every line and total negated, restoring the
+    /// original's stock in the same transaction. Whole sale only.
+    func refund(saleID: UUID, occurredAt: Date, tradingDay: TradingDay, timeZone: TimeZone) throws -> Sale
 }
 
 @MainActor
@@ -88,12 +100,68 @@ public final class SwiftDataSaleRepository: SaleRepository {
         return try context.fetch(descriptor).first
     }
 
+    public func sale(number: Int) throws -> Sale? {
+        var descriptor = FetchDescriptor<Sale>(predicate: #Predicate { $0.number == number })
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
     public func sales(on tradingDay: Date, limit: Int) throws -> [Sale] {
         var descriptor = FetchDescriptor<Sale>(
             predicate: #Predicate { $0.tradingDay == tradingDay }, sortBy: [SortDescriptor(\.number)]
         )
         descriptor.fetchLimit = limit
         return try context.fetch(descriptor)
+    }
+
+    public func recent(before number: Int?, limit: Int) throws -> [Sale] {
+        var descriptor = FetchDescriptor<Sale>(sortBy: [SortDescriptor(\.number, order: .reverse)])
+        if let number {
+            descriptor.predicate = #Predicate { $0.number < number }
+        }
+        descriptor.fetchLimit = limit
+        return try context.fetch(descriptor)
+    }
+
+    public func refunds(of saleID: UUID) throws -> [Sale] {
+        try context.fetch(FetchDescriptor<Sale>(
+            predicate: #Predicate { $0.refundsSaleID == saleID && $0.voidedAt == nil },
+            sortBy: [SortDescriptor(\.number)]
+        ))
+    }
+
+    public func void(saleID: UUID, reason: String, occurredAt: Date) throws {
+        try transactor.perform {
+            let sale = try context.requireSale(id: saleID)
+            guard sale.voidedAt == nil else { throw CoreError.saleAlreadyVoided(id: saleID) }
+            guard try refunds(of: saleID).isEmpty else { throw CoreError.saleHasLiveRefund(id: saleID) }
+            let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { throw CoreError.voidReasonRequired }
+            sale.voidedAt = occurredAt
+            sale.voidReason = trimmed
+            try reverse(sale, reason: .void, saleID: sale.id, occurredAt: occurredAt)
+        }
+    }
+
+    public func refund(saleID: UUID, occurredAt: Date, tradingDay: TradingDay, timeZone: TimeZone) throws -> Sale {
+        try transactor.perform {
+            let original = try context.requireSale(id: saleID)
+            guard original.voidedAt == nil else { throw CoreError.saleAlreadyVoided(id: saleID) }
+            guard original.refundsSaleID == nil else { throw CoreError.saleIsRefund(id: saleID) }
+            guard try refunds(of: saleID).isEmpty else { throw CoreError.saleHasLiveRefund(id: saleID) }
+            let refund = try Self.mirror(
+                original, number: nextNumber(), occurredAt: occurredAt,
+                tradingDay: tradingDay.bucket(for: occurredAt, timeZone: timeZone)
+            )
+            context.insert(refund)
+            for line in original.lines {
+                let stored = Self.mirror(line)
+                context.insert(stored)
+                stored.sale = refund
+            }
+            try reverse(original, reason: .sale, saleID: refund.id, occurredAt: occurredAt)
+            return refund
+        }
     }
 
     private static func makeSale(_ draft: SaleDraft, number: Int, tradingDay: Date) throws -> Sale {
@@ -117,11 +185,45 @@ public final class SwiftDataSaleRepository: SaleRepository {
         )
     }
 
+    /// The refund carries the original's channel verbatim; a cash refund therefore pays out the
+    /// rounded total, which is what leaves the drawer.
+    private static func mirror(_ original: Sale, number: Int, occurredAt: Date, tradingDay: Date) throws -> Sale {
+        let refund = Sale(
+            id: UUID(), number: number, occurredAt: occurredAt, tradingDay: tradingDay,
+            subtotal: -original.subtotal, discountTotal: -original.discountTotal, taxTotal: -original.taxTotal,
+            roundingDelta: -original.roundingDelta, total: -original.total,
+            paymentMethod: .cash, amountTendered: nil, changeGiven: nil, reference: original.reference
+        )
+        refund.paymentMethodRaw = original.paymentMethodRaw
+        refund.refundsSaleID = original.id
+        return refund
+    }
+
+    private static func mirror(_ line: SaleLine) -> SaleLine {
+        SaleLine(
+            productSKU: line.productSKU, name: line.name, quantity: -line.quantity, unitPrice: line.unitPrice,
+            listPrice: line.listPrice, discountAmount: -line.discountAmount, lineTotal: -line.lineTotal
+        )
+    }
+
     private func decrement(_ product: Product, by quantity: Decimal, saleID: UUID, at occurredAt: Date) {
         product.stockOnHand -= quantity
         context.insert(StockMovement(
             productSKU: product.sku, delta: -quantity, reason: .sale, occurredAt: occurredAt, saleID: saleID
         ))
+    }
+
+    /// Reverses exactly the movements the sale recorded, so a product whose `tracksStock` changed
+    /// since the sale still gets back precisely what was taken, once.
+    private func reverse(_ sale: Sale, reason: MovementReason, saleID: UUID, occurredAt: Date) throws {
+        for movement in try context.saleMovements(saleID: sale.id) {
+            let product = try context.requireProduct(sku: movement.productSKU)
+            product.stockOnHand -= movement.delta
+            context.insert(StockMovement(
+                productSKU: movement.productSKU, delta: -movement.delta, reason: reason, occurredAt: occurredAt,
+                saleID: saleID
+            ))
+        }
     }
 }
 
