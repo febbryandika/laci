@@ -33,16 +33,14 @@ public final class SwiftDataProductRepository: ProductRepository {
     }
 
     public func product(sku: String) throws -> Product? {
-        var descriptor = FetchDescriptor<Product>(predicate: #Predicate { $0.sku == sku })
-        descriptor.fetchLimit = 1
-        return try context.fetch(descriptor).first
+        try context.product(sku: sku)
     }
 
     public func lookup(scannedCode code: String) throws -> ScanLookup {
         if case .badChecksum = EAN.validate(code) {
             return .badChecksum
         }
-        guard let product = try barcode(value: code)?.product else { return .unknownProduct }
+        guard let product = try context.barcode(value: code)?.product else { return .unknownProduct }
         return .product(product)
     }
 
@@ -70,8 +68,8 @@ public final class SwiftDataProductRepository: ProductRepository {
 
     public func addBarcode(_ value: String, symbology: Symbology, to sku: String) throws {
         try transactor.perform {
-            guard let product = try product(sku: sku) else { throw CoreError.productNotFound(sku: sku) }
-            if let existing = try barcode(value: value) {
+            let product = try context.requireProduct(sku: sku)
+            if let existing = try context.barcode(value: value) {
                 throw CoreError.barcodeTaken(value: value, existingSKU: existing.product?.sku ?? "")
             }
             let barcode = Barcode(value: value, symbology: symbology)
@@ -82,15 +80,9 @@ public final class SwiftDataProductRepository: ProductRepository {
 
     public func archive(sku: String, updatedAt: Date) throws {
         try transactor.perform {
-            guard let product = try product(sku: sku) else { throw CoreError.productNotFound(sku: sku) }
+            let product = try context.requireProduct(sku: sku)
             product.isArchived = true
             product.updatedAt = updatedAt
         }
-    }
-
-    private func barcode(value: String) throws -> Barcode? {
-        var descriptor = FetchDescriptor<Barcode>(predicate: #Predicate { $0.value == value })
-        descriptor.fetchLimit = 1
-        return try context.fetch(descriptor).first
     }
 }
