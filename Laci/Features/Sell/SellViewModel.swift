@@ -31,14 +31,18 @@ final class SellViewModel {
     private(set) var saleDiscount: Discount = .none
     private(set) var tenderError: TenderError?
     private(set) var lastSale: Sale?
+    /// An earlier trading day that was never closed (SPEC §3.3.5); the sell screen banners it.
+    private(set) var openPriorDay: Date?
 
     private let products: any ProductRepository
     private let sales: any SaleRepository
+    private let closeOuts: any CloseOutRepository
     private let now: () -> Date
 
     init(dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
         products = dependencies.products
         sales = dependencies.sales
+        closeOuts = dependencies.closeOuts
         self.now = now
     }
 
@@ -60,6 +64,14 @@ final class SellViewModel {
             catalogue = []
             catalogueFailed = true
         }
+    }
+
+    // MARK: Close-out
+
+    func refreshCloseOutStatus() {
+        let today = ShopDefaults.tradingDay.bucket(for: now(), timeZone: ShopDefaults.timeZone)
+        let target = CloseOutViewModel.targetDay(latest: try? closeOuts.latest()?.tradingDay, today: today)
+        openPriorDay = target < today ? target : nil
     }
 
     // MARK: Totals
