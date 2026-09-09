@@ -54,23 +54,23 @@ public enum SchemaV1: VersionedSchema {
     }
 
     @Model public final class Sale {
-        @Attribute(.unique) public var id: UUID
-        public var number: Int // human-facing, monotonic, per install
-        public var occurredAt: Date
-        public var tradingDay: Date // start-of-day in the shop's timezone; the join key
-        public var subtotal: Decimal
-        public var discountTotal: Decimal
-        public var taxTotal: Decimal
-        public var roundingDelta: Decimal // §8.3, signed
-        public var total: Decimal // what the customer actually pays
-        public var paymentMethodRaw: String // "cash" | "qris" | "transfer"
-        public var amountTendered: Decimal?
-        public var changeGiven: Decimal?
-        public var reference: String?
-        public var voidedAt: Date?
-        public var voidReason: String?
-        public var refundsSaleID: UUID?
-        @Relationship(deleteRule: .cascade, inverse: \SaleLine.sale) public var lines: [SaleLine]
+        @Attribute(.unique) public internal(set) var id: UUID
+        public internal(set) var number: Int // human-facing, monotonic, per install
+        public internal(set) var occurredAt: Date
+        public internal(set) var tradingDay: Date // start-of-day in the shop's timezone; the join key
+        public internal(set) var subtotal: Decimal
+        public internal(set) var discountTotal: Decimal
+        public internal(set) var taxTotal: Decimal
+        public internal(set) var roundingDelta: Decimal // §8.3, signed
+        public internal(set) var total: Decimal // what the customer actually pays
+        public internal(set) var paymentMethodRaw: String // "cash" | "qris" | "transfer"
+        public internal(set) var amountTendered: Decimal?
+        public internal(set) var changeGiven: Decimal?
+        public internal(set) var reference: String?
+        public internal(set) var voidedAt: Date?
+        public internal(set) var voidReason: String?
+        public internal(set) var refundsSaleID: UUID?
+        @Relationship(deleteRule: .cascade, inverse: \SaleLine.sale) public internal(set) var lines: [SaleLine]
 
         public init(
             id: UUID, number: Int, occurredAt: Date, tradingDay: Date, subtotal: Decimal,
@@ -98,14 +98,14 @@ public enum SchemaV1: VersionedSchema {
     }
 
     @Model public final class SaleLine {
-        public var productSKU: String // denormalised on purpose: a reprint must say what it said
-        public var name: String
-        public var quantity: Decimal
-        public var unitPrice: Decimal
-        public var listPrice: Decimal
-        public var discountAmount: Decimal // percent is resolved to an amount at commit
-        public var lineTotal: Decimal
-        public var sale: Sale?
+        public internal(set) var productSKU: String // denormalised on purpose: a reprint must say what it said
+        public internal(set) var name: String
+        public internal(set) var quantity: Decimal
+        public internal(set) var unitPrice: Decimal
+        public internal(set) var listPrice: Decimal
+        public internal(set) var discountAmount: Decimal // percent is resolved to an amount at commit
+        public internal(set) var lineTotal: Decimal
+        public internal(set) var sale: Sale?
 
         public init(
             productSKU: String, name: String, quantity: Decimal, unitPrice: Decimal, listPrice: Decimal,

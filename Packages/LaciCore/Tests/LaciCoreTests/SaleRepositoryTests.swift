@@ -21,28 +21,6 @@ struct SaleRepositoryTests {
         try products.create(makeProduct("U", tracksStock: false, price: 3000))
     }
 
-    func line(
-        _ sku: String, qty: Decimal = 1, price: Decimal = 5000, list: Decimal? = nil, discount: Discount = .none
-    ) -> SaleDraft.Line {
-        let cart = CartLine(
-            sku: sku, name: "Item \(sku)", quantity: qty, unitPrice: Money(price), discount: discount, taxable: true
-        )
-        return SaleDraft.Line(cart: cart, listPrice: Money(list ?? price))
-    }
-
-    func totals(_ lines: [SaleDraft.Line]) -> SaleTotals {
-        Pricing.totals(lines: lines.map(\.cart), saleDiscount: .none, tax: .nonPKP)
-    }
-
-    func cashDraft(
-        _ lines: [SaleDraft.Line], tendered: Decimal = 100_000, occurredAt: Date? = nil
-    ) throws -> SaleDraft {
-        let totals = totals(lines)
-        let settlement = try #require(Tender.settle(total: totals.grandTotal, tendered: Money(tendered)))
-        return try SaleDraft(lines: lines, totals: totals, payment: .cash(settlement),
-                             occurredAt: occurredAt ?? wib(2026, 9, 10, 12))
-    }
-
     func commit(_ draft: SaleDraft) throws -> Sale {
         try sales.commit(draft, tradingDay: cutover, timeZone: jakarta)
     }

@@ -74,11 +74,29 @@ struct CloseOutRepositoryTests {
         _ = try sell(cash(), occurredAt: noon)
         _ = try sell(.qris(reference: "QR-1"), occurredAt: noon)
         let voided = try sell(cash(), occurredAt: noon)
-        voided.voidedAt = try wib(2026, 9, 9, 13)
-        try store.container.mainContext.save()
+        try sales.void(saleID: voided.id, reason: "salah input", occurredAt: wib(2026, 9, 9, 13))
         _ = try sell(cash(), occurredAt: wib(2026, 9, 10, 12)) // tomorrow
 
         #expect(try closeOuts.cashSales(on: wib(2026, 9, 9)) == 12400)
         #expect(try closeOuts.cashSales(on: wib(2026, 9, 8)) == 0)
+    }
+
+    @Test("Cash refunds are a separate positive figure and never net into cash sales")
+    func cashRefunds() throws {
+        let noon = try wib(2026, 9, 9, 12)
+        let ninth = try wib(2026, 9, 9)
+        let cashSale = try sell(cash(), occurredAt: noon)
+        let qrisSale = try sell(.qris(reference: "QR-1"), occurredAt: noon)
+        _ = try sell(cash(), occurredAt: noon)
+        for sale in [cashSale, qrisSale] {
+            _ = try sales.refund(
+                saleID: sale.id, occurredAt: wib(2026, 9, 9, 14), tradingDay: TradingDay(cutoverHour: 2),
+                timeZone: jakarta
+            )
+        }
+
+        #expect(try closeOuts.cashSales(on: ninth) == 24800)
+        #expect(try closeOuts.cashRefunds(on: ninth) == 12400)
+        #expect(try closeOuts.cashRefunds(on: wib(2026, 9, 8)) == 0)
     }
 }
