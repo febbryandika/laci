@@ -1,19 +1,11 @@
-//
-//  LaciTests.swift
-//  LaciTests
-//
-//  Created by Febbry Andika on 09/09/26.
-//
-
-import Testing
+import Foundation
 @testable import Laci
+import Testing
 
-struct LaciTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-        // Swift Testing Documentation
-        // https://developer.apple.com/documentation/testing
+@Suite("Laci app target")
+struct LaciAppTests {
+    @Test("Unit tests run hosted inside the Laci app")
+    func runsHostedInsideTheApp() {
+        #expect(Bundle.main.bundleIdentifier == "id.Laci")
     }
-
 }

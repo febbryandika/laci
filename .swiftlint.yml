@@ -1,0 +1,21 @@
+# SwiftLint. CI runs `swiftlint lint --strict`, so every warning here fails CI.
+# SwiftFormat owns layout; this file only sets what the two tools must agree on.
+
+excluded:
+  - .build
+  - build
+  - DerivedData
+  - Packages/*/.build
+  - "**/.build"
+
+disabled_rules:
+  - todo # placeholders say what is coming; a TODO must not fail a strict CI run
+
+line_length:
+  warning: 120
+  error: 150
+  ignores_urls: true
+
+# Agrees with SwiftFormat's `--commas always`.
+trailing_comma:
+  mandatory_comma: true
