@@ -12,5 +12,10 @@ struct RootView: View {
 }
 
 #Preview {
-    RootView(dependencies: Dependencies())
+    // A preview body cannot throw; a failed in-memory store is a preview problem, not an app one.
+    if let dependencies = try? Dependencies.inMemory() {
+        RootView(dependencies: dependencies)
+    } else {
+        Text("In-memory store failed")
+    }
 }
