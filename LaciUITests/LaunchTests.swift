@@ -6,9 +6,9 @@ final class LaunchTests: XCTestCase {
     }
 
     @MainActor
-    func testAppLaunchesToRootView() {
+    func testAppLaunchesToSellScreen() {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.staticTexts["RootView.title"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["SellView.search"].waitForExistence(timeout: 5))
     }
 }

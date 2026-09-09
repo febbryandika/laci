@@ -1,13 +1,11 @@
 import SwiftUI
 
-/// Placeholder root. Replaced by the sell screen and three-pane layout in a later phase.
+/// The sell screen is the launch screen (SPEC §3.1.1). The three-pane layout is a later phase.
 struct RootView: View {
     let dependencies: Dependencies
 
     var body: some View {
-        Text("Laci")
-            .font(.largeTitle)
-            .accessibilityIdentifier("RootView.title")
+        SellView(dependencies: dependencies)
     }
 }
 
