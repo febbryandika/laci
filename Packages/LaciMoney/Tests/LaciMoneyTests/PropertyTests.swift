@@ -61,4 +61,21 @@ func inclusiveTaxReconstructs(seed: Int) {
     #expect(t.taxable + t.tax == t.grandTotal, "seed \(seed)")
 }
 
+/// The verbatim test above derives `counted` from `cashSales`, so it cannot tell rounded from exact
+/// sums. Here the drawer is counted from the physical rounded cash, independently of the inputs, and
+/// summing exact totals into `cashSales` (the SPEC §8.4 bug) makes it short on most seeds.
+@Test("Drawer reconciles only when cashSales sums the rounded totals", arguments: 0 ..< 500)
+func drawerHoldsRoundedCash(seed: Int) {
+    var g = Seeded(state: UInt64(seed) &+ 13)
+    let exact = (0 ..< Int.random(in: 1 ... 40, using: &g)).map { _ -> Money in
+        Pricing.totals(lines: randomLines(&g, count: Int.random(in: 1 ... 6, using: &g)),
+                       saleDiscount: .none, tax: .nonPKP).grandTotal
+    }
+    let rounded = exact.map(Tender.roundForCash)
+    let drawer = Money(200_000) + rounded.reduce(.zero, +) // what is physically in the till
+    let i = DrawerInputs(openingFloat: Money(200_000), cashSales: rounded.reduce(.zero, +),
+                         cashRefunds: .zero, payouts: .zero)
+    #expect(CloseOutEngine.reconcile(i, counted: drawer).discrepancy == .zero, "seed \(seed)")
+}
+
 // swiftlint:enable identifier_name
