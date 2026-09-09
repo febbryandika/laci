@@ -1,0 +1,204 @@
+# PLACEHOLDER catalogue: invented rows, not captured data. Replace with the real file (SPEC §12).
+# category: warung sembako
+# captured: placeholder
+sku,name,unit,cost,price,tracks_stock,stock_on_hand,barcodes
+W001,Indomie Goreng 85g,bungkus,2800,3500,true,5,8991128170404|8993976732452
+W002,Indomie Ayam Bawang 85g,bungkus,2800,3500,true,10,8993077935837
+W003,Indomie Soto 85g,bungkus,2800,3500,true,3,8998733020742
+W004,Indomie Kari Ayam 85g,bungkus,2800,3500,true,12,8999870021029
+W005,Indomie Rendang 85g,bungkus,2800,3500,true,6,8998716895701
+W006,Indomie Goreng Aceh 85g,bungkus,2800,3500,true,20,8993545536245
+W007,Indomie Ayam Geprek 85g,bungkus,2800,3500,true,3,8998343873486
+W008,Indomie Goreng Rendang 85g,bungkus,2800,3500,true,48,8995332806722
+W009,"Mie Sedaap Goreng ""Ayam Krispi"" 90g",bungkus,2800,3500,true,10,8990664988108
+W010,Mie Sedaap Kuah Soto 90g,bungkus,2800,3500,true,12,8997341334814
+W011,Mie Sedaap Goreng 90g,bungkus,2800,3500,true,10,8995387272367
+W012,Mie Sedaap Kari Spesial 90g,bungkus,2800,3500,true,36,8995471825776
+W013,Mie Sedaap Baso Spesial 90g,bungkus,2800,3500,true,20,8999221017343
+W014,Mie Sedaap Goreng Korean 90g,bungkus,2800,3500,true,24,8996992464901
+W015,Sarimi Isi 2 Mi Goreng,bungkus,3000,4000,true,48,8997366250137
+W016,Sarimi Isi 2 Ayam Bawang,bungkus,3000,4000,true,0,8997323025808
+W017,Sarimi Isi 2 Kaldu Ayam,bungkus,3000,4000,true,0,8997947695715
+W018,Pop Mie Ayam Bawang 75g,cup,4500,5500,true,0,8996750497011
+W019,Pop Mie Baso 75g,cup,4500,5500,true,12,8997643303662
+W020,Supermi Ayam Bawang 70g,bungkus,2500,3000,true,20,8993801749686
+W021,Susu Bendera Coklat 115ml x 6,pak,15000,18000,true,24,8991575026651
+W022,Susu Bendera Strawberry 115ml x 6,pak,15000,18000,true,48,8992189654179
+W023,Susu Bendera Vanilla 115ml x 6,pak,15000,18000,true,20,8994491434418
+W024,Susu Bear Brand 189ml,kaleng,9500,11500,true,20,8994137444320
+W025,Susu Ultra Coklat 250ml,kotak,6000,7500,true,48,8996670632264
+W026,Susu Ultra Full Cream 250ml,kotak,6000,7500,true,12,8999017789423
+W027,Susu Ultra Coklat 250ml x 12,dus,70000,82000,true,48,8998921505129
+W028,Susu Kental Manis Frisian Flag 370g,kaleng,11000,13000,true,3,8993219328169
+W029,Susu Kental Manis Indomilk 370g,kaleng,10500,12500,true,10,8997074625272
+W030,Dancow Fortigro Coklat 400g,kotak,45000,52000,true,20,8997142918046
+W031,SGM Eksplor 1+ 400g,kotak,42000,49000,true,6,8998822119562
+W032,Milo Sachet 22g,sachet,2500,3000,true,6,8993198752009
+W033,Milo Sachet 22g x 10,renceng,24000,28000,true,5,8997565710357
+W034,Kopi Kapal Api Sachet 20g,sachet,1500,2000,true,6,8998217675819
+W035,Kopi Kapal Api Special Mix 25g,sachet,1500,2000,true,24,8993940685975
+W036,Kopi Kapal Api Special Mix 25g x 10,renceng,13000,16000,true,20,8994119815605
+W037,Kopi ABC Original 31g,sachet,1800,2500,true,24,8997024135547|25962864
+W038,Kopi ABC White Coffee 20g,sachet,1800,2500,true,36,8998646254173
+W039,Kopi ABC Mocca 25g,sachet,1800,2500,true,20,8995979763525
+W040,Kopi ABC Cappuccino 25g,sachet,1800,2500,true,20,8991607583855
+W041,Kopi Good Day Cappuccino 25g,sachet,2000,2500,true,20,8999595506276
+W042,Kopi Good Day Mocacinno 20g,sachet,2000,2500,true,3,8993228718654
+W043,Kopi Luwak White Koffie 20g,sachet,1800,2500,true,6,8994288513500
+W044,Nescafe Classic 2g x 10,renceng,11000,13000,true,12,8995644647907
+W045,Torabika Duo 25g,sachet,1500,2000,true,48,8997381146194
+W046,Kopi Torabika Cappuccino 25g,sachet,1800,2500,true,24,8995795090201
+W047,Teh Sariwangi 25 x 1.85g,kotak,6500,8000,true,36,8998500534410
+W048,Teh Celup Sosro 30 x 2g,kotak,7500,9000,true,20,8993906120076
+W049,Teh Botol Sosro 350ml,botol,3500,4500,true,24,8996661987762
+W050,Teh Pucuk Harum 350ml,botol,3000,4000,true,5,8995280528646
+W051,Teh Kotak Sosro 200ml,kotak,3000,4000,true,0,8996212635777
+W052,Fruit Tea Blackcurrant 350ml,botol,3500,4500,true,5,8993296627643
+W053,Nutrisari Jeruk Peras 14g,sachet,1500,2000,true,12,
+W054,Marimas Jeruk 8g,sachet,500,1000,true,5,
+W055,Energen Coklat 30g,sachet,2500,3000,true,24,8990977694475
+W056,Energen Vanilla 30g,sachet,2500,3000,true,48,8991925751400
+W057,Extra Joss Sachet 4g,sachet,1500,2000,true,12,8997739368117
+W058,Kuku Bima Ener-G Anggur,sachet,1500,2000,true,5,8992173415106
+W059,Aqua 600ml,botol,2500,3500,true,12,8990932148975|8992712686332
+W060,Aqua 1500ml,botol,4500,6000,true,6,8996689041439
+W061,Aqua Galon 19L Isi Ulang,galon,15000,20000,true,20,
+W062,Le Minerale 600ml,botol,2500,3000,true,5,8999397934499
+W063,Le Minerale 1500ml,botol,4000,5500,true,48,8993934845132
+W064,Aqua Gelas 220ml x 48,dus,32000,38000,true,6,8993287171773
+W065,Coca-Cola 390ml,botol,4000,5500,true,36,8997202203983
+W066,Sprite 390ml,botol,4000,5500,true,5,8997402063776
+W067,Fanta Strawberry 390ml,botol,4000,5500,true,0,8999162573823
+W068,Pocari Sweat 500ml,botol,7000,8500,true,0,8993469023920
+W069,Mizone Apple Guava 500ml,botol,5500,7000,true,48,8999366255631
+W070,Yakult 65ml x 5,pak,10000,12000,true,3,8992473590176
+W071,Floridina Orange 350ml,botol,3000,4000,true,12,8993212143134
+W072,Beras Ramos 5kg,karung,62000,70000,true,24,8998936678269
+W073,Beras Pandan Wangi 5kg,karung,70000,78000,true,48,8994777282535
+W074,Beras Medium,kg,11500,13000,true,36,25486568
+W075,Beras Premium,kg,13500,15000,true,5,
+W076,Gula Pasir Gulaku 1kg,kg,16000,18000,true,12,8992666217644
+W077,Gula Pasir Curah,kg,15500,17000,true,48,
+W078,Gula Merah,kg,18000,21000,true,20,
+W079,Garam Cap Kapal 250g,bungkus,2000,3000,true,3,8991432210391
+W080,Garam Refina 500g,bungkus,3500,4500,true,12,8999230524580
+W081,Minyak Goreng Bimoli 1L,botol,17000,19000,true,20,8994635089467
+W082,Minyak Goreng Bimoli 2L,botol,33000,36500,true,12,8993060262650
+W083,Minyak Goreng Sania 2L,botol,32000,35500,true,24,8994820221450
+W084,Minyak Goreng Filma 1L,pouch,16500,18500,true,0,8992501018665
+W085,Minyak Goreng Curah,kg,14000,16000,true,12,
+W086,Minyak Kita 1L,pouch,14000,15500,true,0,8990703803089
+W087,Tepung Terigu Segitiga Biru 1kg,kg,11000,13000,true,36,8991360880253
+W088,Tepung Terigu Cakra Kembar 1kg,kg,12000,14000,true,10,8991206208098
+W089,Tepung Tapioka Rose Brand 500g,bungkus,5500,7000,true,36,8994692369946
+W090,Tepung Bumbu Sajiku 100g,bungkus,3500,4500,true,12,8990921853125
+W091,Tepung Beras Rose Brand 500g,bungkus,6000,7500,true,48,8997868285378
+W092,Telur Ayam,kg,27000,30000,true,3,
+W093,Telur Puyuh,kg,32000,36000,true,10,
+W094,Kecap Manis Bango 220ml,botol,10000,12000,true,10,8990459244006
+W095,Kecap Manis Bango 550ml,botol,21000,24000,true,20,8992989629209
+W096,Kecap ABC Manis 135ml,botol,5500,7000,true,10,8995368867544
+W097,Kecap Sedaap 275ml,botol,9000,11000,true,6,8990503748641
+W098,Saos Sambal ABC 335ml,botol,11000,13000,true,48,8998830518647
+W099,Saos Sambal Indofood 140ml,botol,5500,7000,true,0,8994721675390
+W100,Saos Tomat Del Monte 140ml,botol,5500,7000,true,48,
+W101,Sambal Terasi ABC 4 x 20g,renceng,3500,4500,true,3,8994788305056
+W102,Royco Ayam 8g x 12,renceng,6000,7500,true,24,8992768253830
+W103,Masako Ayam 7g x 12,renceng,6000,7500,true,12,8993838520944
+W104,Masako Sapi 7g x 12,renceng,6000,7500,true,5,8991009874896
+W105,Ajinomoto 250g,bungkus,10000,12000,true,36,8994432762754
+W106,Sasa 250g,bungkus,9500,11500,true,6,8992845416837
+W107,Bumbu Racik Nasi Goreng 20g,sachet,1500,2000,true,10,8992082448127
+W108,Bumbu Racik Ayam Goreng 26g,sachet,1500,2000,true,3,8999007580825
+W109,Kobe Tepung Bakwan 90g,bungkus,3000,4000,true,5,8997573568742
+W110,Santan Kara 65ml,kotak,3000,4000,true,20,8998166699072
+W111,Santan Kara 200ml,kotak,7000,8500,true,0,8992382587182|22824899
+W112,Santan Sun Kara 65ml x 6,pak,17000,20000,true,6,8990440951579
+W113,Bawang Merah,kg,32000,36000,true,48,
+W114,Bawang Putih,kg,30000,34000,true,24,
+W115,Cabai Rawit Merah,kg,45000,52000,true,20,
+W116,Cabai Merah Keriting,kg,35000,40000,true,6,
+W117,Tomat,kg,12000,14000,true,36,
+W118,Kentang,kg,16000,18000,true,48,
+W119,Wortel,kg,14000,16000,true,24,
+W120,Kol,kg,9000,11000,true,36,
+W121,Jeruk Nipis,kg,20000,24000,true,10,
+W122,Tempe Papan,papan,4000,5000,true,36,
+W123,Tahu Putih 10 pcs,bungkus,6000,7500,true,36,
+W124,Tahu Kuning 10 pcs,bungkus,6500,8000,true,20,
+W125,Sarden ABC 155g,kaleng,9000,11000,true,5,8992788213500
+W126,Sarden ABC 425g,kaleng,19000,22000,true,20,8995883215202
+W127,Kornet Pronas 198g,kaleng,18000,21000,true,10,8996520115350
+W128,Abon Sapi Gloria 100g,bungkus,22000,26000,true,10,8999067181888
+W129,Sosis So Nice 15 x 15g,bungkus,13000,15000,true,36,8991164918251
+W130,Nugget Fiesta 250g,bungkus,24000,28000,true,10,8995327523504
+W131,Bakso Sapi Bernardi 500g,bungkus,42000,48000,true,5,8993945360761
+W132,Kerupuk Udang Finna 500g,bungkus,16000,19000,true,6,8993347691210
+W133,Kerupuk Kampung Curah,kg,24000,28000,true,36,
+W134,Chitato Sapi Panggang 68g,bungkus,9500,11500,true,48,8993126712235
+W135,Lays Rumput Laut 68g,bungkus,9500,11500,true,6,8992628377447
+W136,Qtela Singkong Balado 60g,bungkus,7000,8500,true,6,8997857219018
+W137,Taro Net Seaweed 60g,bungkus,6000,7500,true,6,8991037637685
+W138,Cheetos Jagung Bakar 40g,bungkus,4500,5500,true,0,8999885351937
+W139,Kusuka Keripik Singkong 60g,bungkus,6500,8000,true,12,8998958850858
+W140,Roma Kelapa 300g,bungkus,8500,10000,true,6,8995849500762
+W141,Roma Malkist Abon 135g,bungkus,6500,8000,true,3,8992044100384
+W142,Khong Guan Kaleng 1.6kg,kaleng,85000,95000,true,6,8991537570536
+W143,Oreo Vanilla 133g,bungkus,8000,9500,true,3,8995802354258
+W144,Biskuat Coklat 60g,bungkus,3500,4500,true,48,8992609451883
+W145,Good Time Choco Chip 72g,bungkus,5500,7000,true,24,8990456379183
+W146,Tango Wafer Coklat 176g,bungkus,10000,12000,true,48,8997077987223
+W147,Beng-Beng 20g,pcs,1500,2000,true,48,8995400637371
+W148,Silverqueen Chunky 95g,pcs,24000,28000,true,5,8995601557584|29079278
+W149,Chocolatos Wafer 8g,pcs,1000,1500,true,36,8999279149553
+W150,Nabati Wafer Keju 50g,bungkus,3000,4000,true,12,8992853516161
+W151,Richeese Nabati 8 x 8g,renceng,6500,8000,true,6,8992473535689
+W152,Kopiko Candy 150g,bungkus,8500,10000,true,10,8990312127125
+W153,Relaxa Mint 125g,bungkus,7000,8500,true,24,8995706305226
+W154,Fox Candy 125g,bungkus,8000,9500,true,6,8999001243795
+W155,Roti Tawar Sari Roti,bungkus,13000,15000,true,10,8991404200467
+W156,Roti Sobek Sari Roti Coklat,bungkus,12000,14000,true,20,8990880590802
+W157,Roti Sisir Mentega,bungkus,6000,7500,true,3,8991350063949
+W158,Lifebuoy Sabun Batang 75g,pcs,3000,4000,true,12,8993094018742
+W159,Lux Soft Touch 75g,pcs,3200,4000,true,0,8994781711243
+W160,Dettol Sabun Batang 100g,pcs,5500,7000,true,20,8994379566163
+W161,Lifebuoy Body Wash 400ml,botol,22000,26000,true,24,8993903514717
+W162,Sunsilk Shampoo 170ml,botol,18000,21000,true,24,8999309739280
+W163,Pantene Shampoo 135ml,botol,19000,22000,true,6,8992346904093
+W164,Clear Men Shampoo 160ml,botol,20000,23500,true,20,8998253257284
+W165,Sunsilk Sachet 9ml x 12,renceng,9000,11000,true,24,8993776807879
+W166,Pantene Sachet 9ml x 12,renceng,9500,11500,true,10,8997085553885
+W167,Pepsodent 190g,pcs,12000,14000,true,24,8993861049627
+W168,Pepsodent 75g,pcs,5500,7000,true,6,8997540323305
+W169,Ciptadent 190g,pcs,9000,11000,true,6,8991688911806
+W170,Sikat Gigi Formula,pcs,5000,6500,true,6,8991823834687
+W171,Listerine 100ml,botol,12000,14500,true,3,8994978469407
+W172,Rexona Roll On 45ml,pcs,14000,16500,true,24,8994149895493
+W173,Rinso Anti Noda 800g,bungkus,21000,24000,true,3,8998537476677
+W174,Rinso Cair 750ml,pouch,17000,20000,true,24,8997943801509
+W175,Daia Bubuk 900g,bungkus,17000,19500,true,48,8993576189274
+W176,So Klin Pewangi 900ml,pouch,14000,16500,true,24,8996180224188
+W177,Molto Ultra 900ml,pouch,17000,20000,true,6,8992326246144
+W178,Sunlight 755ml,pouch,13500,16000,true,24,8997113215457
+W179,Mama Lemon 780ml,pouch,12500,15000,true,12,8997926342005
+W180,Bayclin 500ml,botol,9000,11000,true,3,8990343631288
+W181,Wipol 780ml,botol,14000,16500,true,12,8995917127037
+W182,Vixal 800ml,botol,13000,15500,true,24,8993570273467
+W183,Sabun Colek B29 600g,bungkus,8000,9500,true,0,8994466582823
+W184,Tisu Paseo 250 sheet,pak,14000,16500,true,20,8990168974379
+W185,Tisu Nice 250 sheet,pak,12000,14000,true,3,8990230146253|22331595
+W186,Tisu Basah Mitu 50s,pak,9000,11000,true,3,8998269201684
+W187,Pembalut Charm Safe Night 8s,pak,9000,11000,true,36,8998957497641
+W188,Pembalut Laurier 8s,pak,8500,10500,true,6,8992632705595
+W189,Pulsa Telkomsel 10k,pcs,10000,12000,false,0,
+W190,Pulsa Telkomsel 25k,pcs,25000,27000,false,0,
+W191,Pulsa Indosat 10k,pcs,10000,12000,false,0,
+W192,Pulsa XL 10k,pcs,10000,12000,false,0,
+W193,Token Listrik 20k,pcs,20000,22500,false,0,
+W194,Token Listrik 50k,pcs,50000,52500,false,0,
+W195,Es Batu Kristal,bungkus,1000,2000,false,0,
+W196,Es Batu Balok,pcs,500,1000,false,0,
+W197,Kantong Plastik Kresek Kecil,pak,4000,5500,false,0,
+W198,Kantong Plastik Kresek Besar,pak,8000,10000,false,0,
+W199,Karet Gelang,ons,3000,4000,false,0,KARET-GELANG
+W200,Gorengan,pcs,700,1000,false,0,
