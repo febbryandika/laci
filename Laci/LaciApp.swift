@@ -1,3 +1,6 @@
+import LaciCore
+import LaciMoney
+import LaciPrint
 import SwiftUI
 
 /// Composition root. Every dependency the app needs is built here, once, and handed down.

@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		62DB75293050FD760050D816 /* LaciMoney in Frameworks */ = {isa = PBXBuildFile; productRef = 62DB75283050FD760050D816 /* LaciMoney */; };
+		62DB752B3050FD7C0050D816 /* LaciPrint in Frameworks */ = {isa = PBXBuildFile; productRef = 62DB752A3050FD7C0050D816 /* LaciPrint */; };
+		62DB752D3050FD800050D816 /* LaciCore in Frameworks */ = {isa = PBXBuildFile; productRef = 62DB752C3050FD800050D816 /* LaciCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		62DB74D93050906A0050D816 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -53,6 +59,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				62DB75293050FD760050D816 /* LaciMoney in Frameworks */,
+				62DB752D3050FD800050D816 /* LaciCore in Frameworks */,
+				62DB752B3050FD7C0050D816 /* LaciPrint in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +89,7 @@
 				62DB74CD305090680050D816 /* Laci */,
 				62DB74DB3050906A0050D816 /* LaciTests */,
 				62DB74E53050906A0050D816 /* LaciUITests */,
+				62DB75273050FD760050D816 /* Frameworks */,
 				62DB74CC305090680050D816 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +104,13 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		62DB75273050FD760050D816 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -102,6 +119,7 @@
 			buildConfigurationList = 62DB74EC3050906A0050D816 /* Build configuration list for PBXNativeTarget "Laci" */;
 			buildPhases = (
 				62DB74C7305090680050D816 /* Sources */,
+				62DB752E3050FDA70050D816 /* SwiftLint */,
 				62DB74C8305090680050D816 /* Frameworks */,
 				62DB74C9305090680050D816 /* Resources */,
 			);
@@ -114,6 +132,9 @@
 			);
 			name = Laci;
 			packageProductDependencies = (
+				62DB75283050FD760050D816 /* LaciMoney */,
+				62DB752A3050FD7C0050D816 /* LaciPrint */,
+				62DB752C3050FD800050D816 /* LaciCore */,
 			);
 			productName = Laci;
 			productReference = 62DB74CB305090680050D816 /* Laci.app */;
@@ -197,6 +218,11 @@
 			);
 			mainGroup = 62DB74C2305090680050D816;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				62DB75243050FC330050D816 /* XCLocalSwiftPackageReference "Packages/LaciMoney" */,
+				62DB75253050FC470050D816 /* XCLocalSwiftPackageReference "Packages/LaciPrint" */,
+				62DB75263050FC550050D816 /* XCLocalSwiftPackageReference "Packages/LaciCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 62DB74CC305090680050D816 /* Products */;
 			projectDirPath = "";
@@ -232,6 +258,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		62DB752E3050FDA70050D816 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nexport PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"\nif command -v swiftlint >/dev/null 2>&1; then\n  cd \"$SRCROOT\" && swiftlint lint --config \"$SRCROOT/.swiftlint.yml\" --quiet\nelse\n  echo \"warning: SwiftLint not installed (brew install swiftlint); skipping lint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		62DB74C7305090680050D816 /* Sources */ = {
@@ -310,7 +358,6 @@
 				DEVELOPMENT_TEAM = Y69W7C3PX5;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -374,7 +421,6 @@
 				DEVELOPMENT_TEAM = Y69W7C3PX5;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -566,6 +612,39 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		62DB75243050FC330050D816 /* XCLocalSwiftPackageReference "Packages/LaciMoney" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LaciMoney;
+		};
+		62DB75253050FC470050D816 /* XCLocalSwiftPackageReference "Packages/LaciPrint" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LaciPrint;
+		};
+		62DB75263050FC550050D816 /* XCLocalSwiftPackageReference "Packages/LaciCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LaciCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		62DB75283050FD760050D816 /* LaciMoney */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62DB75243050FC330050D816 /* XCLocalSwiftPackageReference "Packages/LaciMoney" */;
+			productName = LaciMoney;
+		};
+		62DB752A3050FD7C0050D816 /* LaciPrint */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62DB75253050FC470050D816 /* XCLocalSwiftPackageReference "Packages/LaciPrint" */;
+			productName = LaciPrint;
+		};
+		62DB752C3050FD800050D816 /* LaciCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62DB75263050FC550050D816 /* XCLocalSwiftPackageReference "Packages/LaciCore" */;
+			productName = LaciCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 62DB74C3305090680050D816 /* Project object */;
 }
