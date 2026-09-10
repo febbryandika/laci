@@ -15,4 +15,8 @@ enum ShopDefaults {
     static let locale = Locale(identifier: "id_ID")
     /// A close-out discrepancy beyond this needs a note before it can be saved (SPEC §3.3.3).
     static let discrepancyThreshold = Money(5000)
+    /// The receipt header and footer (SPEC §7); editable once the Settings phase lands.
+    static let shopName = "Warung"
+    static let shopLines: [String] = []
+    static let footerLines = ["Terima kasih"]
 }

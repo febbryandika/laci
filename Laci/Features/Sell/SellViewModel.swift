@@ -37,12 +37,14 @@ final class SellViewModel {
     private let products: any ProductRepository
     private let sales: any SaleRepository
     private let closeOuts: any CloseOutRepository
+    private let printer: PrinterCoordinator
     private let now: () -> Date
 
     init(dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
         products = dependencies.products
         sales = dependencies.sales
         closeOuts = dependencies.closeOuts
+        printer = dependencies.printer
         self.now = now
     }
 
@@ -207,16 +209,21 @@ final class SellViewModel {
 
     private func commit(_ payment: SaleDraft.Payment, totals: SaleTotals) {
         let draft = SaleDraft(lines: lines, totals: totals, payment: payment, occurredAt: now())
+        let sale: Sale
         do {
-            lastSale = try sales.commit(draft, tradingDay: ShopDefaults.tradingDay, timeZone: ShopDefaults.timeZone)
+            sale = try sales.commit(draft, tradingDay: ShopDefaults.tradingDay, timeZone: ShopDefaults.timeZone)
         } catch {
             tenderError = .commitFailed
             return
         }
+        lastSale = sale
         lines = []
         saleDiscount = .none
         query = ""
         tenderError = nil
+        // Last, and never awaited: the sale is saved and the cart is clear whatever the printer does
+        // (SPEC §7.3).
+        printer.printReceipt(for: sale)
     }
 }
 

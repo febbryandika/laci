@@ -279,3 +279,66 @@ struct SellViewModelTests {
         #expect(viewModel.settle(tendered: Money(13000))?.change == Money(600))
     }
 }
+
+/// SPEC §7.3: the sale is committed and the cart cleared before a byte reaches the printer, and
+/// nothing about the printer can block or fail a checkout.
+@MainActor
+@Suite("Checkout never waits for the printer")
+struct SellViewModelPrintingTests {
+    struct Sell {
+        let viewModel: SellViewModel
+        let transport: FakePrinterTransport
+        let dependencies: Dependencies
+    }
+
+    func makeSell(_ mode: FakePrinterTransport.Mode) throws -> Sell {
+        let transport = FakePrinterTransport(mode: mode)
+        let dependencies = try Dependencies.inMemory(printer: transport)
+        try dependencies.products.create(Product(
+            sku: "A", name: "Item A", unit: "pcs", cost: 0, price: 12350, tracksStock: false, updatedAt: fixedNow
+        ))
+        let viewModel = SellViewModel(dependencies: dependencies, now: { fixedNow })
+        viewModel.loadCatalogue()
+        return Sell(viewModel: viewModel, transport: transport, dependencies: dependencies)
+    }
+
+    @Test("With a printer that never answers, the sale is saved and the cart is clear before any await")
+    func hangingPrinterDoesNotBlock() throws {
+        let sell = try makeSell(.hang)
+        let (viewModel, dependencies) = (sell.viewModel, sell.dependencies)
+        let product = try dependencies.products.product(sku: "A")
+        try viewModel.add(#require(product))
+        viewModel.checkoutCash(tendered: Money(20000))
+        let sale = try #require(viewModel.lastSale)
+        #expect(viewModel.lines.isEmpty)
+        #expect(viewModel.tenderError == nil)
+        #expect(dependencies.printer.inFlightSaleID == sale.id)
+    }
+
+    @Test("With a printer that fails, the sale still exists and the failure lands on the sale, not the checkout")
+    func failingPrinterDoesNotFailCheckout() async throws {
+        let sell = try makeSell(.fail(.notConnected))
+        let (viewModel, transport, dependencies) = (sell.viewModel, sell.transport, sell.dependencies)
+        let product = try dependencies.products.product(sku: "A")
+        try viewModel.add(#require(product))
+        viewModel.checkoutCash(tendered: Money(20000))
+        let sale = try #require(viewModel.lastSale)
+        #expect(viewModel.tenderError == nil)
+        #expect(await until { dependencies.printer.failedSale?.id == sale.id })
+        let stored = try dependencies.sales.sale(id: sale.id)
+        #expect(stored?.receiptFailedAt != nil)
+        #expect(transport.payloads.count == 1)
+    }
+
+    @Test("The receipt is rendered from the committed sale, after the cart was cleared")
+    func printsTheCommittedSale() async throws {
+        let sell = try makeSell(.succeed)
+        let (viewModel, transport, dependencies) = (sell.viewModel, sell.transport, sell.dependencies)
+        let product = try dependencies.products.product(sku: "A")
+        try viewModel.add(#require(product))
+        viewModel.checkoutCash(tendered: Money(20000))
+        let sale = try #require(viewModel.lastSale)
+        #expect(await until { dependencies.printer.lastOutcome == .printed })
+        #expect(transport.payloads.first?.range(of: Data("No. \(sale.number)".utf8)) != nil)
+    }
+}
