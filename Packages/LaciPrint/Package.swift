@@ -12,8 +12,9 @@ let package = Package(
     name: "LaciPrint",
     platforms: [.iOS("26.5"), .macOS("26.0")],
     products: [.library(name: "LaciPrint", targets: ["LaciPrint"])],
+    dependencies: [.package(path: "../LaciMoney")],
     targets: [
-        .target(name: "LaciPrint", swiftSettings: strictSwift),
+        .target(name: "LaciPrint", dependencies: ["LaciMoney"], swiftSettings: strictSwift),
         .testTarget(name: "LaciPrintTests", dependencies: ["LaciPrint"], swiftSettings: strictSwift),
     ]
 )
