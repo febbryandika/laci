@@ -7,9 +7,13 @@ import SwiftData
 @MainActor
 public final class Transactor {
     public let context: ModelContext
+    /// A context does not keep its container alive; holding it here means a repository can never
+    /// outlive its store, however long a caller keeps the repository.
+    private let container: ModelContainer
     private var depth = 0
 
     public init(container: ModelContainer) {
+        self.container = container
         context = container.mainContext
         context.autosaveEnabled = false
     }
