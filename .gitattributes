@@ -1,0 +1,2 @@
+# Golden ESC/POS fixtures: compared byte-for-byte, never merged or diffed as text.
+*.bin binary
