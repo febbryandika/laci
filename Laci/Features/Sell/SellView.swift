@@ -35,6 +35,9 @@ struct SellView: View {
                 if let openPriorDay = viewModel.openPriorDay {
                     openDaySection(openPriorDay)
                 }
+                if let failed = dependencies.printer.failedSale {
+                    printFailureSection(failed)
+                }
                 searchSection
                 if !viewModel.query.isEmpty {
                     resultsSection
@@ -60,13 +63,21 @@ struct SellView: View {
                     }
                     .accessibilityIdentifier("SellView.history")
                 }
+                ToolbarItem {
+                    NavigationLink {
+                        SettingsView(dependencies: dependencies)
+                    } label: {
+                        Label("Pengaturan", systemImage: "gearshape")
+                    }
+                    .accessibilityIdentifier("SellView.settings")
+                }
             }
             .safeAreaInset(edge: .bottom) { payButton }
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case let .editLine(sku): CartLineEditor(sku: sku, viewModel: viewModel)
                 case .saleDiscount: SaleDiscountEditor(viewModel: viewModel)
-                case .tender: TenderView(viewModel: viewModel)
+                case .tender: TenderView(viewModel: viewModel, printer: dependencies.printer)
                 }
             }
             .task { viewModel.loadCatalogue() }
@@ -85,6 +96,17 @@ struct SellView: View {
             }
             .accessibilityIdentifier("SellView.openDay")
         }
+    }
+
+    /// SPEC §7.3: a failed print is a row, not a dialog. The sale is already saved.
+    private func printFailureSection(_ failed: FailedSale) -> some View {
+        Section {
+            Label("Struk #\(failed.number) gagal dicetak", systemImage: "printer.slash")
+            Button("Cetak ulang") { dependencies.printer.reprint(saleID: failed.id) }
+                .accessibilityIdentifier("SellView.reprint")
+            Button("Tutup") { dependencies.printer.dismissFailure() }
+        }
+        .accessibilityIdentifier("SellView.printFailure")
     }
 
     private var searchSection: some View {

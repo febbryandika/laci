@@ -3,8 +3,8 @@ import LaciCore
 import SwiftData
 import SwiftUI
 
-/// One committed sale, read-only, with the two corrections SPEC §3.1.6 allows and a reprint
-/// placeholder until the printer transport lands.
+/// One committed sale, read-only, with the two corrections SPEC §3.1.6 allows and a reprint that
+/// works forever (SPEC §1).
 struct SaleDetailView: View {
     private let dependencies: Dependencies
     @State private var viewModel: SaleDetailViewModel
@@ -49,6 +49,7 @@ struct SaleDetailView: View {
             paymentSection(sale)
             linksSection
             actionsSection
+            reprintSection(sale)
         }
     }
 
@@ -140,11 +141,24 @@ struct SaleDetailView: View {
                 }
             }
         }
-        Section {
-            Button("Cetak ulang") {}
-                .disabled(true)
+    }
+
+    private func reprintSection(_ sale: Sale) -> some View {
+        let printer = dependencies.printer
+        return Section {
+            if sale.receiptFailedAt != nil {
+                Label("Struk gagal dicetak", systemImage: "printer.slash")
+            }
+            if printer.inFlightSaleID == sale.id {
+                Text("Mencetak struk…").foregroundStyle(.secondary)
+            }
+            Button("Cetak ulang") { printer.reprint(saleID: sale.id) }
+                .disabled(!printer.isConnected || printer.inFlightSaleID == sale.id)
+                .accessibilityIdentifier("SaleDetailView.reprint")
         } footer: {
-            Text("Printer belum disiapkan")
+            if !printer.isConnected {
+                Text("Printer tidak terhubung")
+            }
         }
     }
 

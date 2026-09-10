@@ -10,6 +10,7 @@ struct TenderView: View {
     }
 
     let viewModel: SellViewModel
+    let printer: PrinterCoordinator
     @Environment(\.dismiss) private var dismiss
     @State private var kind: Kind = .cash
     @State private var customText = ""
@@ -158,9 +159,26 @@ struct TenderView: View {
                     LabeledContent("Referensi") { Text(reference) }
                 }
             }
+            receiptSection(sale)
             Section {
                 Button("Penjualan baru") { dismiss() }
                     .accessibilityIdentifier("TenderView.newSale")
+            }
+        }
+    }
+
+    /// Text only, never a spinner: a printer that is off must not hold up the next customer.
+    @ViewBuilder
+    private func receiptSection(_ sale: Sale) -> some View {
+        if printer.inFlightSaleID == sale.id {
+            Section {
+                Text("Mencetak struk…").foregroundStyle(.secondary)
+            }
+        } else if printer.failedSale?.id == sale.id {
+            Section {
+                Label("Struk gagal dicetak", systemImage: "printer.slash")
+                Button("Cetak ulang") { printer.reprint(saleID: sale.id) }
+                    .accessibilityIdentifier("TenderView.reprint")
             }
         }
     }
