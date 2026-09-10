@@ -132,3 +132,44 @@ struct SaleRepositoryTests {
         #expect(throws: CoreError.settlementMismatch) { try commit(draft) }
     }
 }
+
+@MainActor
+@Suite("Receipt print status")
+struct SaleReceiptStatusTests {
+    let store: TestStore
+    let sales: SwiftDataSaleRepository
+
+    init() throws {
+        store = try TestStore()
+        let transactor = Transactor(container: store.container)
+        let products = SwiftDataProductRepository(transactor: transactor)
+        sales = SwiftDataSaleRepository(transactor: transactor)
+        try products.create(makeProduct("A", stockOnHand: 10, price: 5000))
+    }
+
+    @Test("A new sale has no failed print")
+    func freshSaleIsClean() throws {
+        let sale = try sales.commit(cashDraft([line("A")]), tradingDay: TradingDay(cutoverHour: 2), timeZone: jakarta)
+        #expect(sale.receiptFailedAt == nil)
+    }
+
+    @Test("A failed print is recorded on the sale and a later success clears it")
+    func markAndClear() throws {
+        let sale = try sales.commit(cashDraft([line("A")]), tradingDay: TradingDay(cutoverHour: 2), timeZone: jakarta)
+        let failedAt = try wib(2026, 9, 10, 12, 1)
+
+        try sales.markReceipt(saleID: sale.id, failedAt: failedAt)
+        #expect(try sales.sale(id: sale.id)?.receiptFailedAt == failedAt)
+
+        try sales.markReceipt(saleID: sale.id, failedAt: nil)
+        #expect(try sales.sale(id: sale.id)?.receiptFailedAt == nil)
+    }
+
+    @Test("Marking an unknown sale is refused")
+    func unknownSale() throws {
+        let missing = UUID()
+        #expect(throws: CoreError.saleNotFound(id: missing)) {
+            try sales.markReceipt(saleID: missing, failedAt: nil)
+        }
+    }
+}

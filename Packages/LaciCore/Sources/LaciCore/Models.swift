@@ -3,7 +3,7 @@ import SwiftData
 
 /// Schema V1 is what ships to TestFlight (SPEC §4). Every later change gets a new `VersionedSchema`
 /// and a `MigrationStage`; until then V1 is edited in place. `Payout` and `CloseOut.cashRefunds` were
-/// added in Phase 6 for SPEC §3.3.4 and §8.4.
+/// added in Phase 6 for SPEC §3.3.4 and §8.4; `Sale.receiptFailedAt` in Phase 8 for SPEC §7.3.
 public enum SchemaV1: VersionedSchema {
     public static var versionIdentifier: Schema.Version {
         Schema.Version(1, 0, 0)
@@ -71,6 +71,9 @@ public enum SchemaV1: VersionedSchema {
         public internal(set) var voidedAt: Date?
         public internal(set) var voidReason: String?
         public internal(set) var refundsSaleID: UUID?
+        /// When the last receipt print for this sale failed (SPEC §7.3); nil once one succeeds. Added
+        /// to V1 in place: nothing has shipped yet (Phase 6 precedent), and an optional needs no default.
+        public internal(set) var receiptFailedAt: Date?
         @Relationship(deleteRule: .cascade, inverse: \SaleLine.sale) public internal(set) var lines: [SaleLine]
 
         public init(
@@ -94,6 +97,7 @@ public enum SchemaV1: VersionedSchema {
             voidedAt = nil
             voidReason = nil
             refundsSaleID = nil
+            receiptFailedAt = nil
             lines = []
         }
     }

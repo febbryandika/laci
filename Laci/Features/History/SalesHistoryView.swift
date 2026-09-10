@@ -61,6 +61,10 @@ private struct SaleRow: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(sale.total, format: MoneyFormat.rupiah).monospacedDigit()
                 HStack(spacing: 6) {
+                    if sale.receiptFailedAt != nil {
+                        Image(systemName: "printer.slash")
+                            .accessibilityLabel("Struk gagal dicetak")
+                    }
                     if sale.voidedAt != nil {
                         Text("Dibatalkan").foregroundStyle(.red)
                     } else if sale.isRefund {
