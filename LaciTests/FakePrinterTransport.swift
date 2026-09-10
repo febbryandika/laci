@@ -5,7 +5,7 @@ import Synchronization
 
 /// A transport that never touches Bluetooth: it succeeds, fails with a chosen error, or hangs, and
 /// records every payload it was asked to send.
-nonisolated final class FakePrinterTransport: PrinterTransporting, Sendable {
+final nonisolated class FakePrinterTransport: PrinterTransporting, Sendable {
     enum Mode: Sendable {
         case succeed
         case fail(PrintError)
@@ -67,7 +67,7 @@ nonisolated final class FakePrinterTransport: PrinterTransporting, Sendable {
         state.withLock { $0.forgotten = true }
     }
 
-    func reconnectRemembered(_ printer: RememberedPrinter) async throws {}
+    func reconnectRemembered(_: RememberedPrinter) async throws {}
 
     func send(_ payload: Data) async throws {
         state.withLock { $0.payloads.append(payload) }
@@ -86,7 +86,9 @@ func until(_ deadline: Duration = .seconds(5), _ condition: @MainActor () -> Boo
     let clock = ContinuousClock()
     let end = clock.now + deadline
     while !condition() {
-        if clock.now > end { return false }
+        if clock.now > end {
+            return false
+        }
         try? await Task.sleep(for: .milliseconds(5))
     }
     return true

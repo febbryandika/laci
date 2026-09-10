@@ -72,17 +72,17 @@ nonisolated struct UnavailablePrinterTransport: PrinterTransporting {
 
     func stopScan() async {}
 
-    func connect(_ id: UUID) async throws -> String {
+    func connect(_: UUID) async throws -> String {
         throw PrintError.bluetoothUnavailable
     }
 
     func disconnect() async {}
 
-    func reconnectRemembered(_ printer: RememberedPrinter) async throws {
+    func reconnectRemembered(_: RememberedPrinter) async throws {
         throw PrintError.bluetoothUnavailable
     }
 
-    func send(_ payload: Data) async throws {
+    func send(_: Data) async throws {
         throw PrintError.notConnected
     }
 }

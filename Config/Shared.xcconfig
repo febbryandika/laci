@@ -7,3 +7,7 @@ TARGETED_DEVICE_FAMILY = 1,2
 // Lets the SwiftLint run-script phase read sources. Takes effect only after the
 // project-level pbxproj value is deleted in Xcode (Phase 1 GUI steps).
 ENABLE_USER_SCRIPT_SANDBOXING = NO
+
+// SPEC §15: usage strings are for a shop owner, in Indonesian, and say why. Generated Info.plist
+// keys are build settings, so this needs no project-file change.
+INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = Untuk mencetak struk ke printer Bluetooth. Tidak ada data lain yang dikirim.

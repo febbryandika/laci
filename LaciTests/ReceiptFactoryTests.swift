@@ -89,17 +89,17 @@ struct ReceiptFactoryTests {
 
     @Test("Cash carries tendered and change; QRIS and transfer carry the reference")
     func tenders() throws {
-        let cash = ReceiptFactory.make(try commit(), products: dependencies.products, isReprint: false)
+        let cash = try ReceiptFactory.make(commit(), products: dependencies.products, isReprint: false)
         #expect(cash.tender == .cash(tendered: Money(100_000), change: Money(100_000) - Money(45500)))
 
-        let qris = ReceiptFactory.make(
-            try commit(.qris(reference: "QR-1")), products: dependencies.products, isReprint: false
+        let qris = try ReceiptFactory.make(
+            commit(.qris(reference: "QR-1")), products: dependencies.products, isReprint: false
         )
         #expect(qris.tender == .qris(reference: "QR-1"))
         #expect(qris.roundingDelta == .zero)
 
-        let transfer = ReceiptFactory.make(
-            try commit(.transfer(reference: "BCA 9")), products: dependencies.products, isReprint: false
+        let transfer = try ReceiptFactory.make(
+            commit(.transfer(reference: "BCA 9")), products: dependencies.products, isReprint: false
         )
         #expect(transfer.tender == .transfer(reference: "BCA 9"))
     }

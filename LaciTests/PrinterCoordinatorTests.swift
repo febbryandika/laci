@@ -116,7 +116,7 @@ struct PrinterCoordinatorTests {
     }
 
     @Test("The test print sends the diagnostic receipt at the chosen paper width")
-    func testPrint() async throws {
+    func diagnosticPrint() async throws {
         let fixture = try PrinterFixture(mode: .succeed)
         fixture.printer.setPaperWidth(.mm80)
         fixture.printer.printTest()

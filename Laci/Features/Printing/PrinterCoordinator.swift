@@ -43,11 +43,19 @@ final class PrinterCoordinator {
     }
 
     var negotiatedMTU: Int? {
-        if case let .connected(_, mtu) = connection { mtu } else { nil }
+        if case let .connected(_, mtu) = connection {
+            mtu
+        } else {
+            nil
+        }
     }
 
     var isConnected: Bool {
-        if case .connected = connection { true } else { false }
+        if case .connected = connection {
+            true
+        } else {
+            false
+        }
     }
 
     /// Launch: the transport starts reconnecting to the remembered printer, and its state flows here.
@@ -84,7 +92,8 @@ final class PrinterCoordinator {
     }
 
     func printTest() {
-        send(DiagnosticReceipt.render(paper: paperWidth), sale: nil)
+        let data = DiagnosticReceipt.render(paper: paperWidth)
+        dispatch(sale: nil) { data }
     }
 
     func dismissFailure() {
@@ -93,17 +102,17 @@ final class PrinterCoordinator {
 
     private func run(receipt: Receipt, sale: FailedSale) {
         let paper = paperWidth
-        // Rendering is pure and off the main actor, like the write that follows.
-        Task.detached { [self] in
-            let data = ReceiptRenderer.render(receipt, paper: paper)
-            await send(data, sale: sale)
-        }
+        dispatch(sale: sale) { ReceiptRenderer.render(receipt, paper: paper) }
     }
 
-    private func send(_ data: Data, sale: FailedSale?) {
+    /// Rendering and the write run off the main actor. `self` is weak on purpose: if the
+    /// composition root is gone by the time the printer answers (a test store torn down, never
+    /// the running app), there is nothing left to record into.
+    private func dispatch(sale: FailedSale?, payload: @escaping @Sendable () -> Data) {
         let transport = transport
         let clock = clock
-        Task.detached { [self] in
+        Task.detached { [weak self] in
+            let data = payload()
             let start = clock.now
             let outcome: PrintOutcome
             do {
@@ -114,7 +123,10 @@ final class PrinterCoordinator {
             } catch {
                 outcome = .failed(.transport(String(describing: error)))
             }
-            await record(outcome, duration: start.duration(to: clock.now), sale: sale)
+            let duration = start.duration(to: clock.now)
+            // Resolved on the main actor, at record time, so a coordinator whose store has already
+            // gone is skipped rather than retained past it.
+            await MainActor.run { self?.record(outcome, duration: duration, sale: sale) }
         }
     }
 
