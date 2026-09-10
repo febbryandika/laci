@@ -56,6 +56,9 @@ public protocol SaleRepository: AnyObject {
     /// A new sale linked through `refundsSaleID` with every line and total negated, restoring the
     /// original's stock in the same transaction. Whole sale only.
     func refund(saleID: UUID, occurredAt: Date, tradingDay: TradingDay, timeZone: TimeZone) throws -> Sale
+    /// Records that the receipt print failed at `failedAt`, or clears it (nil) after a successful
+    /// reprint. The only mutation besides void that a committed sale receives, and it is not money.
+    func markReceipt(saleID: UUID, failedAt: Date?) throws
 }
 
 @MainActor
@@ -161,6 +164,12 @@ public final class SwiftDataSaleRepository: SaleRepository {
             }
             try reverse(original, reason: .sale, saleID: refund.id, occurredAt: occurredAt)
             return refund
+        }
+    }
+
+    public func markReceipt(saleID: UUID, failedAt: Date?) throws {
+        try transactor.perform {
+            try context.requireSale(id: saleID).receiptFailedAt = failedAt
         }
     }
 
