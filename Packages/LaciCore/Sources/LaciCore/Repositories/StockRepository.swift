@@ -15,6 +15,8 @@ public struct StockAdjustment: Hashable, Sendable {
 public protocol StockRepository: AnyObject {
     /// Newest first.
     func movements(for sku: String, limit: Int) throws -> [StockMovement]
+    /// Every movement with `start <= occurredAt < end`, oldest first, then by SKU.
+    func movements(from start: Date, before end: Date) throws -> [StockMovement]
     /// One manual movement; `note` is the operator's reason and is stored verbatim.
     func adjust(sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date, note: String?) throws
     /// Applied as one batch or not at all (SPEC §3.2). Batch movements carry no note.
@@ -45,6 +47,13 @@ public final class SwiftDataStockRepository: StockRepository {
         )
         descriptor.fetchLimit = limit
         return try context.fetch(descriptor)
+    }
+
+    public func movements(from start: Date, before end: Date) throws -> [StockMovement] {
+        try context.fetch(FetchDescriptor<StockMovement>(
+            predicate: #Predicate { $0.occurredAt >= start && $0.occurredAt < end },
+            sortBy: [SortDescriptor(\.occurredAt), SortDescriptor(\.productSKU)]
+        ))
     }
 
     public func adjust(
