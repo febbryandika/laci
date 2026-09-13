@@ -85,6 +85,9 @@ struct LaciApp: App {
         // SPEC §7.3: the shop switches the printer on at 7am and Laci is already connected at the
         // first sale, not after someone opens Settings.
         session.dependencies.printer.start()
+        // SPEC §5.1: family sharing, refunds and revocations arrive on the updates listener and
+        // nowhere else, so it starts at launch. The entitlement is only checked at checkout.
+        session.unlock.start()
         // SPEC §5.3: the charging-time backup. Registration must precede the end of launch.
         BackupScheduler.register(service: session.backups)
         session.backups.onAutomaticChanged = { BackupScheduler.schedule(enabled: $0) }

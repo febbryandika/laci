@@ -11,6 +11,8 @@ enum TenderError: Hashable {
     case cashShort(rounded: Money)
     case missingReference
     case commitFailed
+    /// SPEC §3.4: the trial is over and the non-consumable is not owned.
+    case locked
 }
 
 /// The two tenders that need a reference instead of cash (SPEC §1). Cash has its own path.
@@ -55,15 +57,22 @@ final class SellViewModel: ScanReceiving {
     private let sales: any SaleRepository
     private let closeOuts: any CloseOutRepository
     private let printer: PrinterCoordinator
+    private let unlock: any UnlockGating
+    private let trialLimit: Int
     private let now: () -> Date
     private let signposter = OSSignposter(subsystem: "id.laci", category: "scan")
     private let log = Logger(subsystem: "id.laci", category: "scan")
 
-    init(dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
+    init(
+        dependencies: Dependencies, unlock: any UnlockGating, trialLimit: Int = TrialPolicy.saleLimit(),
+        now: @escaping () -> Date = { Date() }
+    ) {
         products = dependencies.products
         sales = dependencies.sales
         closeOuts = dependencies.closeOuts
         printer = dependencies.printer
+        self.unlock = unlock
+        self.trialLimit = trialLimit
         self.now = now
     }
 
@@ -234,7 +243,24 @@ final class SellViewModel: ScanReceiving {
 
     // MARK: Checkout
 
+    /// SPEC §3.4, decided at the button and nowhere else: unlocked never asks the store; otherwise
+    /// the live sale count against the limit. A count that cannot be read is treated as zero,
+    /// because an error must never stop a shop from selling.
+    func isCheckoutLocked() -> Bool {
+        guard !unlock.isUnlocked else { return false }
+        do {
+            return try sales.committedSaleCount() >= trialLimit
+        } catch {
+            log.error("sale count failed: \(String(describing: error), privacy: .public)")
+            return false
+        }
+    }
+
     func checkoutCash(tendered: Money) {
+        guard !isCheckoutLocked() else {
+            tenderError = .locked
+            return
+        }
         guard !lines.isEmpty else {
             tenderError = .emptyCart
             return
@@ -248,6 +274,10 @@ final class SellViewModel: ScanReceiving {
     }
 
     func checkoutNonCash(_ method: NonCashMethod, reference: String) {
+        guard !isCheckoutLocked() else {
+            tenderError = .locked
+            return
+        }
         guard !lines.isEmpty else {
             tenderError = .emptyCart
             return

@@ -12,6 +12,7 @@ struct SellView: View {
         case tender
         case scanner
         case newProduct(PendingBarcode)
+        case paywall
 
         var id: String {
             switch self {
@@ -20,6 +21,7 @@ struct SellView: View {
             case .tender: "tender"
             case .scanner: "scanner"
             case let .newProduct(pending): "new-\(pending.value)"
+            case .paywall: "paywall"
             }
         }
     }
@@ -30,15 +32,17 @@ struct SellView: View {
     }
 
     private let dependencies: Dependencies
+    private let unlock: UnlockStore
     @State private var viewModel: SellViewModel
     @State private var sheet: Sheet?
     @FocusState private var focus: Field?
     @State private var wedgeEnabled = false
     @State private var isVisible = false
 
-    init(dependencies: Dependencies) {
+    init(dependencies: Dependencies, unlock: UnlockStore) {
         self.dependencies = dependencies
-        _viewModel = State(initialValue: SellViewModel(dependencies: dependencies))
+        self.unlock = unlock
+        _viewModel = State(initialValue: SellViewModel(dependencies: dependencies, unlock: unlock))
     }
 
     var body: some View {
@@ -113,6 +117,7 @@ struct SellView: View {
                         viewModel.add(product)
                         self.sheet = nil
                     }
+                case .paywall: PaywallView(unlock: unlock, origin: .checkout)
                 }
             }
             // Always present, so focus can be given to it during a navigation transition; the
@@ -260,7 +265,8 @@ struct SellView: View {
 
     private var payButton: some View {
         Button {
-            sheet = .tender
+            // SPEC §5.1: the entitlement is checked here and nowhere else.
+            sheet = viewModel.isCheckoutLocked() ? .paywall : .tender
         } label: {
             Text("Bayar")
                 .frame(maxWidth: .infinity, minHeight: 44)
@@ -337,7 +343,7 @@ private struct CartRow: View {
 
     #Preview {
         if let dependencies = previewDependencies() {
-            SellView(dependencies: dependencies)
+            SellView(dependencies: dependencies, unlock: UnlockStore())
         } else {
             Text("In-memory store failed")
         }

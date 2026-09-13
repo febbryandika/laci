@@ -1,0 +1,82 @@
+{
+  "identifier" : "9B6E2C4A-5D31-4F0B-8A7E-1C2D3E4F5A6B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "149000",
+      "familyShareable" : true,
+      "internalID" : "3F1A7C52-8D4B-4E6A-9C0D-2B5E8F7A1D63",
+      "localizations" : [
+        {
+          "description" : "Buka Laci tanpa batas penjualan. Sekali beli, tanpa akun, tanpa langganan.",
+          "displayName" : "Buka Laci",
+          "locale" : "id_ID"
+        }
+      ],
+      "productID" : "id.laci.unlock",
+      "referenceName" : "Buka Laci",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "id_ID",
+    "_storefront" : "IDN",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

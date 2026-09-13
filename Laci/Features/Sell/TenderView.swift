@@ -189,6 +189,7 @@ struct TenderView: View {
         case let .cashShort(rounded): Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.rupiah)")
         case .missingReference: Text("Nomor referensi wajib diisi")
         case .commitFailed: Text("Penjualan gagal disimpan, coba lagi")
+        case .locked: Text("Masa percobaan habis. Buka Laci dari tombol Bayar atau Pengaturan.")
         }
     }
 }

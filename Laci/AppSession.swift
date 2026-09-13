@@ -17,11 +17,15 @@ final class AppSession {
     private(set) var restoreNotice: RestoreNotice?
     private(set) var isRestoring = false
     let backups: BackupService
+    /// Here and not in `Dependencies`: a restore rebuilds those, and the `Transaction.updates`
+    /// listener must outlive the store (SPEC §5.1).
+    let unlock: UnlockStore
     private let log = Logger(subsystem: "id.laci", category: "store")
 
-    init(dependencies: Dependencies, backups: BackupService) {
+    init(dependencies: Dependencies, backups: BackupService, unlock: UnlockStore = UnlockStore()) {
         self.dependencies = dependencies
         self.backups = backups
+        self.unlock = unlock
     }
 
     /// The destructive restore (SPEC §5.3), in the order that keeps a store open at every step:

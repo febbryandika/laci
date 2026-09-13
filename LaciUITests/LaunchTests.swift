@@ -155,9 +155,12 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(backupNow.waitForExistence(timeout: 5))
         backupNow.tap()
         // The rows below the button sit past the bottom of an iPhone screen, and a List only
-        // exposes the rows it has laid out.
-        app.swipeUp()
+        // exposes the rows it has laid out; scroll in small steps so the status row is not
+        // pushed past the top either.
         let status = app.staticTexts["SettingsView.backupStatus"]
+        for _ in 0 ..< 4 where !status.waitForExistence(timeout: 2) {
+            app.swipeUp(velocity: .slow)
+        }
         XCTAssertTrue(status.waitForExistence(timeout: 10))
         XCTAssertEqual(status.label, "Cadangan tersimpan.")
         app.buttons["SettingsView.restore"].tap()

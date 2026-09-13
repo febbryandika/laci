@@ -1,4 +1,5 @@
 import Foundation
+import LaciCore
 import LaciPrint
 import SwiftUI
 
@@ -13,6 +14,8 @@ struct SettingsView: View {
     @Environment(AppSession.self) private var session
     @State private var wedgeEnabled = ScannerSettings.wedgeEnabled()
     @State private var semicolonDelimiter = ExportSettings.semicolonDelimiter()
+    @State private var committedSales = 0
+    @State private var paywallShown = false
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -24,11 +27,15 @@ struct SettingsView: View {
             scannerSection
             exportSection
             backupSection
+            purchaseSection
             diagnosticsSection
         }
         .navigationTitle("Pengaturan")
         .navigationBarTitleDisplayMode(.inline)
         .task { await session.backups.refreshArchives() }
+        // Display only; a count that cannot be read shows as zero, the same policy as the gate.
+        .onAppear { committedSales = (try? dependencies.sales.committedSaleCount()) ?? 0 }
+        .sheet(isPresented: $paywallShown) { PaywallView(unlock: session.unlock, origin: .settings) }
     }
 
     private var printerSection: some View {
@@ -56,6 +63,23 @@ struct SettingsView: View {
             Button("Cetak tes") { printer.printTest() }
                 .disabled(!printer.isConnected)
                 .accessibilityIdentifier("SettingsView.testPrint")
+        }
+    }
+
+    /// SPEC §3.4. Restore is reachable here before the limit, not only from a blocked checkout.
+    private var purchaseSection: some View {
+        Section("Pembelian") {
+            if session.unlock.isUnlocked {
+                Label("Laci sudah dibuka", systemImage: "checkmark.seal")
+                    .accessibilityIdentifier("SettingsView.unlocked")
+            } else {
+                LabeledContent("Masa percobaan") {
+                    Text("\(committedSales) dari \(TrialPolicy.saleLimit()) penjualan")
+                }
+                .accessibilityIdentifier("SettingsView.trialStatus")
+                Button("Buka Laci…") { paywallShown = true }
+                    .accessibilityIdentifier("SettingsView.unlock")
+            }
         }
     }
 

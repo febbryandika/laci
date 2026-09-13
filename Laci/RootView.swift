@@ -6,7 +6,7 @@ struct RootView: View {
     @Environment(AppSession.self) private var session
 
     var body: some View {
-        SellView(dependencies: session.dependencies)
+        SellView(dependencies: session.dependencies, unlock: session.unlock)
             .id(session.generation)
             .alert("Pemulihan data", isPresented: noticeShown, presenting: session.restoreNotice) { _ in
                 Button("OK") { session.dismissRestoreNotice() }

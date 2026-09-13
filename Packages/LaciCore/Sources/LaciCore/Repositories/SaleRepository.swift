@@ -62,6 +62,9 @@ public protocol SaleRepository: AnyObject {
     /// Records that the receipt print failed at `failedAt`, or clears it (nil) after a successful
     /// reprint. The only mutation besides void that a committed sale receives, and it is not money.
     func markReceipt(saleID: UUID, failedAt: Date?) throws
+    /// Live sales only: not voided, not a refund mirror. The trial's feed (SPEC §3.4); voiding a
+    /// sale frees its slot, because the count is the store's truth and not a second ledger.
+    func committedSaleCount() throws -> Int
 }
 
 @MainActor
@@ -181,6 +184,12 @@ public final class SwiftDataSaleRepository: SaleRepository {
         try transactor.perform {
             try context.requireSale(id: saleID).receiptFailedAt = failedAt
         }
+    }
+
+    public func committedSaleCount() throws -> Int {
+        try context.fetchCount(FetchDescriptor<Sale>(
+            predicate: #Predicate { $0.voidedAt == nil && $0.refundsSaleID == nil }
+        ))
     }
 
     private static func makeSale(_ draft: SaleDraft, number: Int, tradingDay: Date) throws -> Sale {
