@@ -288,7 +288,7 @@ private extension SellView {
         if let dependencies = previewDependencies() {
             SellView(dependencies: dependencies, unlock: UnlockStore())
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

@@ -46,8 +46,10 @@ struct DiscountFields: View {
         }
         .onChange(of: draft.kind) { draft.valueText = "" }
         if draft.kind != .none {
-            TextField(draft.kind == .amount ? "Rp" : "%", text: $draft.valueText)
-                .keyboardType(.numberPad)
+            TextField(text: $draft.valueText, prompt: Text(verbatim: draft.kind == .amount ? "Rp" : "%")) {
+                EmptyView()
+            }
+            .keyboardType(.numberPad)
         }
     }
 }

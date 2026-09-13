@@ -93,7 +93,7 @@ struct ScannerSheet: View {
     }
 
     /// Scrolls, so the manual-entry field is reachable at every Dynamic Type size.
-    private func failurePanel(_ title: String, showsSettings: Bool) -> some View {
+    private func failurePanel(_ title: LocalizedStringKey, showsSettings: Bool) -> some View {
         ScrollView {
             failureContent(title, showsSettings: showsSettings)
         }
@@ -101,7 +101,7 @@ struct ScannerSheet: View {
         .background(.regularMaterial)
     }
 
-    private func failureContent(_ title: String, showsSettings: Bool) -> some View {
+    private func failureContent(_ title: LocalizedStringKey, showsSettings: Bool) -> some View {
         VStack(spacing: 12) {
             Image(systemName: "camera")
                 .font(.largeTitle)
@@ -140,7 +140,7 @@ struct ScannerSheet: View {
         .background(.regularMaterial)
     }
 
-    private static func interruptionText(_ reason: AVCaptureSession.InterruptionReason) -> String {
+    private static func interruptionText(_ reason: AVCaptureSession.InterruptionReason) -> LocalizedStringKey {
         switch reason {
         case .videoDeviceNotAvailableWithMultipleForegroundApps: "Kamera dipakai aplikasi lain (Split View)"
         case .videoDeviceInUseByAnotherClient: "Kamera sedang dipakai aplikasi lain"
@@ -153,7 +153,7 @@ struct ScannerSheet: View {
 /// One wording per outcome, shared by the sheet and the sell screen (SPEC §6): a misread says
 /// "scan again", never "unknown product".
 enum ScanNoticeText {
-    static func label(_ notice: ScanNotice) -> String {
+    static func label(_ notice: ScanNotice) -> LocalizedStringResource {
         switch notice {
         case .scanAgain: "Pindai ulang: barcode tidak terbaca dengan benar"
         case .lookupFailed: "Tidak bisa mencari produk"

@@ -52,8 +52,8 @@ private struct SaleRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("#\(sale.number)")
-                Text(sale.occurredAt, format: DateFormat.dateTime)
+                Text(verbatim: "#\(sale.number)")
+                Text(verbatim: sale.occurredAt.formatted(DateFormat.dateTime))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -86,7 +86,7 @@ private struct SaleRow: View {
                 SalesHistoryView(dependencies: dependencies)
             }
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

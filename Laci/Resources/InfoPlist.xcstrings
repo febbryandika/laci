@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "id",
+  "strings" : {
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Permission alert. Written for a shop owner: what Bluetooth is for, and what is not sent.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To print receipts on your Bluetooth printer. Nothing else is sent."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untuk mencetak struk ke printer Bluetooth. Tidak ada data lain yang dikirim."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お店のBluetoothプリンターでレシートを印刷するためです。それ以外のデータは送信しません。"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Permission alert. Written for a shop owner: what the camera is for, and that no photo is kept.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To scan product barcodes. Photos are never saved or sent."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untuk memindai barcode produk. Foto tidak pernah disimpan atau dikirim."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "商品のバーコードを読み取るためです。写真は保存も送信もされません。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -10,7 +10,7 @@ struct TenderCompletedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            LabeledContent("Penjualan") { Text("#\(sale.number)") }
+            LabeledContent("Penjualan") { Text(verbatim: "#\(sale.number)") }
                 .accessibilityIdentifier("Tender.completedNumber")
             LabeledContent("Total") { MoneyText(sale.total) }
             if let change = sale.changeGiven {

@@ -20,10 +20,16 @@ struct CatalogueInspectorView: View {
                 LabeledContent("Modal") { MoneyText(product.cost) }
             }
             Section("Stok") {
-                LabeledContent("Lacak stok") { Text(product.tracksStock ? "Ya" : "Tidak") }
+                LabeledContent("Lacak stok") {
+                    if product.tracksStock {
+                        Text("Ya")
+                    } else {
+                        Text("Tidak")
+                    }
+                }
                 if product.tracksStock {
                     LabeledContent("Stok") {
-                        Text("\(product.stockOnHand, format: MoneyFormat.plain) \(product.unit)")
+                        Text(verbatim: "\(product.stockOnHand.formatted(MoneyFormat.plain)) \(product.unit)")
                     }
                 }
             }
@@ -37,7 +43,7 @@ struct CatalogueInspectorView: View {
                 }
             }
             Section {
-                LabeledContent("Diperbarui") { Text(product.updatedAt, format: DateFormat.dateTime) }
+                LabeledContent("Diperbarui") { Text(verbatim: product.updatedAt.formatted(DateFormat.dateTime)) }
             }
         }
         .navigationTitle(product.name)

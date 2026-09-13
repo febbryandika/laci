@@ -36,6 +36,6 @@ struct RootView: View {
         RootView()
             .environment(session)
     } else {
-        Text("In-memory store failed")
+        Text(verbatim: "In-memory store failed")
     }
 }

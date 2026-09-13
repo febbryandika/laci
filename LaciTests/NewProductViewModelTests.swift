@@ -57,7 +57,7 @@ struct NewProductViewModelTests {
         viewModel.name = "Other"
         viewModel.priceText = "2000"
         #expect(viewModel.save() == nil)
-        #expect(viewModel.error == "SKU sudah dipakai")
+        #expect(viewModel.error == .skuTaken)
         guard case .unknownProduct = try dependencies.products.lookup(scannedCode: pending.value) else {
             Issue.record("expected the barcode to remain unknown")
             return
@@ -75,7 +75,8 @@ struct NewProductViewModelTests {
         viewModel.name = "Other"
         viewModel.priceText = "2000"
         #expect(viewModel.save() == nil)
-        #expect(viewModel.error == "Barcode sudah dipakai SKU B")
+        #expect(viewModel.error == .barcodeTaken(sku: "B"))
+        #expect(localized(NewProductError.barcodeTaken(sku: "B").message) == "Barcode sudah dipakai SKU B")
         let created = try dependencies.products.product(sku: "NEW")
         #expect(created == nil)
     }
@@ -84,11 +85,11 @@ struct NewProductViewModelTests {
     func validation() throws {
         viewModel.priceText = "3500"
         #expect(viewModel.save() == nil)
-        #expect(viewModel.error == "Nama wajib diisi")
+        #expect(viewModel.error == .nameRequired)
         viewModel.name = "Item"
         viewModel.priceText = "3.5.0"
         #expect(viewModel.save() == nil)
-        #expect(viewModel.error == "Harga jual tidak valid")
+        #expect(viewModel.error == .priceInvalid)
         let all = try dependencies.products.all(includeArchived: true)
         #expect(all.isEmpty)
     }

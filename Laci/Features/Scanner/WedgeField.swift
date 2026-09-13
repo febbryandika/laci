@@ -12,7 +12,7 @@ struct WedgeField<Field: Hashable>: View {
     @State private var text = ""
 
     var body: some View {
-        TextField("", text: $text)
+        TextField(text: $text) { EmptyView() }
             .focused(focus, equals: field)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()

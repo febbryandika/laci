@@ -21,8 +21,9 @@ final class RestoreViewModel {
         typedName.trimmingCharacters(in: .whitespaces) == expectedName && !isRestoring
     }
 
-    /// The one sentence that says what is lost.
-    var warning: String {
+    /// The one sentence that says what is lost. The date is formatted here, in the shop's locale,
+    /// so the sentence carries a string the catalog substitutes as-is.
+    var warning: LocalizedStringResource {
         let since = archive.createdAt.formatted(DateFormat.dateTime)
         return "Semua penjualan, stok, dan tutup kas setelah \(since) akan hilang dan tidak bisa dikembalikan."
     }

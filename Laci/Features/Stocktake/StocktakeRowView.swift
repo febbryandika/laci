@@ -32,7 +32,7 @@ struct StocktakeRowView: View {
     private var title: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(row.name)
-            Text("\(row.sku) · sistem \(row.systemQuantity, format: MoneyFormat.plain) \(row.unit)")
+            Text("\(row.sku) · sistem \(row.systemQuantity.formatted(MoneyFormat.plain)) \(row.unit)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -52,14 +52,14 @@ struct StocktakeRowView: View {
     private var variance: some View {
         VStack(alignment: .trailing, spacing: 2) {
             if let variance = row.variance, let value = row.varianceValue {
-                Text(variance, format: MoneyFormat.plain.sign(strategy: .always(includingZero: false)))
+                Text(verbatim: variance.formatted(MoneyFormat.plain.sign(strategy: .always(includingZero: false))))
                     .monospacedDigit()
                 MoneyText(value)
                     .font(.caption)
                     .monospacedDigit()
                     .foregroundStyle(value < .zero ? .red : .secondary)
             } else {
-                Text("—")
+                Text(verbatim: "—")
             }
         }
     }

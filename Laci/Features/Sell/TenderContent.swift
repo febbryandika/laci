@@ -210,8 +210,8 @@ struct TenderContent: View {
         switch error {
         case .emptyCart: Text("Keranjang kosong")
         case let .cashShort(rounded):
-            Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.rupiah)")
-                .accessibilityLabel(Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.spoken)"))
+            Text("Uang kurang dari \(rounded.amount.formatted(MoneyFormat.rupiah))")
+                .accessibilityLabel(Text("Uang kurang dari \(rounded.amount.formatted(MoneyFormat.spoken))"))
         case .missingReference: Text("Nomor referensi wajib diisi")
         case .commitFailed: Text("Penjualan gagal disimpan, coba lagi")
         case .locked: Text("Masa percobaan habis. Buka Laci dari tombol Bayar atau Pengaturan.")

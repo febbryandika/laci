@@ -159,9 +159,9 @@ struct CloseOutView: View {
                 .accessibilityIdentifier("CloseOutView.save")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Selisih lebih dari \(thresholdText) wajib diberi catatan.")
+                Text("Selisih lebih dari \(threshold.formatted(MoneyFormat.rupiah)) wajib diberi catatan.")
                     .accessibilityLabel(Text(
-                        "Selisih lebih dari \(threshold, format: MoneyFormat.spoken) wajib diberi catatan."
+                        "Selisih lebih dari \(threshold.formatted(MoneyFormat.spoken)) wajib diberi catatan."
                     ))
                 Text("Setoran dicatat sebagai pengeluaran; modal awal besok adalah uang dihitung dikurangi setoran.")
             }
@@ -174,10 +174,10 @@ struct CloseOutView: View {
             Section {
                 NavigationLink {
                     CloseOutDetailView(tradingDay: latest.tradingDay, dependencies: dependencies)
-                        .navigationTitle(Text(latest.tradingDay, format: DateFormat.day))
+                        .navigationTitle(latest.tradingDay.formatted(DateFormat.day))
                 } label: {
                     LabeledContent("Tutup kas terakhir") {
-                        Text(latest.tradingDay, format: DateFormat.day)
+                        Text(verbatim: latest.tradingDay.formatted(DateFormat.day))
                     }
                 }
             }
@@ -186,10 +186,6 @@ struct CloseOutView: View {
 
     private var threshold: Decimal {
         ShopDefaults.discrepancyThreshold.amount
-    }
-
-    private var thresholdText: Text {
-        Text(threshold, format: MoneyFormat.rupiah)
     }
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Money) -> some View {
@@ -259,7 +255,7 @@ extension PayoutKind {
                 CloseOutView(dependencies: dependencies)
             }
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

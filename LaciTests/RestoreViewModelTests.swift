@@ -35,10 +35,15 @@ struct RestoreViewModelTests {
     @Test("The warning names the backup's date in the shop's zone")
     func warningNamesTheBackupDate() {
         let viewModel = RestoreViewModel(archive: archive, expectedName: "Warung")
-        #expect(viewModel.warning.hasPrefix("Semua penjualan, stok, dan tutup kas setelah "))
-        #expect(viewModel.warning.hasSuffix(" akan hilang dan tidak bisa dikembalikan."))
-        #expect(viewModel.warning.contains("2027"))
-        #expect(viewModel.warning.contains("15."))
+        let warning = localized(viewModel.warning)
+        #expect(warning.hasPrefix("Semua penjualan, stok, dan tutup kas setelah "))
+        #expect(warning.hasSuffix(" akan hilang dan tidak bisa dikembalikan."))
+        #expect(warning.contains("2027"))
+        #expect(warning.contains("15."))
+        // The date is the shop's whatever the UI language: the English sentence carries the same one.
+        let english = localized(viewModel.warning, in: "en")
+        #expect(english.contains("15."))
+        #expect(!english.hasPrefix("Semua"))
     }
 
     @Test("The expected name defaults to the shop's")

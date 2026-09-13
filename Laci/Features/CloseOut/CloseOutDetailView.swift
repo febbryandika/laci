@@ -25,8 +25,8 @@ struct CloseOutDetailView: View {
     private func form(for closeOut: CloseOut) -> some View {
         Form {
             Section {
-                LabeledContent("Hari") { Text(closeOut.tradingDay, format: DateFormat.day) }
-                LabeledContent("Ditutup") { Text(closeOut.closedAt, format: DateFormat.dateTime) }
+                LabeledContent("Hari") { Text(verbatim: closeOut.tradingDay.formatted(DateFormat.day)) }
+                LabeledContent("Ditutup") { Text(verbatim: closeOut.closedAt.formatted(DateFormat.dateTime)) }
             }
             Section("Perhitungan") {
                 amountRow("Modal awal", closeOut.openingFloat)
@@ -100,7 +100,7 @@ extension Attribution {
                 CloseOutDetailView(tradingDay: Date(), dependencies: dependencies)
             }
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

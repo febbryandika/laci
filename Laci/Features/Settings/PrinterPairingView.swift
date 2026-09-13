@@ -14,7 +14,7 @@ struct PrinterPairingView: View {
         List {
             if let failure {
                 Section {
-                    Text("Gagal menghubungkan: \(PrintErrorText.label(failure))")
+                    Text("Gagal menghubungkan: \(String(localized: PrintErrorText.label(failure)))")
                         .foregroundStyle(.red)
                 }
             }
@@ -63,7 +63,7 @@ struct PrinterPairingView: View {
         }
     }
 
-    private var unavailableTitle: String {
+    private var unavailableTitle: LocalizedStringKey {
         printer.connection == .off ? "Bluetooth mati" : "Bluetooth tidak tersedia di perangkat ini"
     }
 

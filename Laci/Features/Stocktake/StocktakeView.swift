@@ -29,8 +29,14 @@ struct StocktakeView: View {
             entrySection
             if let applied = viewModel.appliedCount, viewModel.rows.isEmpty {
                 Section {
-                    Text(applied == 0 ? "Stok sesuai, tidak ada penyesuaian." : "\(applied) SKU disesuaikan.")
-                        .accessibilityIdentifier("StocktakeView.applied")
+                    Group {
+                        if applied == 0 {
+                            Text("Stok sesuai, tidak ada penyesuaian.")
+                        } else {
+                            Text("\(applied) SKU disesuaikan.")
+                        }
+                    }
+                    .accessibilityIdentifier("StocktakeView.applied")
                 }
             }
             if !viewModel.rows.isEmpty {
@@ -91,9 +97,12 @@ struct StocktakeView: View {
         }
     }
 
-    private var applyTitle: String {
+    /// Zero is its own sentence, not a plural form; the count string varies by the catalog's rules.
+    private var applyTitle: Text {
         let changed = viewModel.changedRows.count
-        return changed == 0 ? "Selesaikan hitungan tanpa penyesuaian?" : "Terapkan \(changed) penyesuaian stok?"
+        return changed == 0
+            ? Text("Selesaikan hitungan tanpa penyesuaian?")
+            : Text("Terapkan \(changed) penyesuaian stok?")
     }
 
     private var entrySection: some View {

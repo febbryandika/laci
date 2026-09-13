@@ -5,12 +5,48 @@ import XCTest
 /// catalogue, settings wiped, and never the on-disk store. The keys are read by `LaunchEnvironment`
 /// in the app, DEBUG builds only.
 enum UITestApp {
+    /// The three UI languages. Every launch pins one, because the simulator's own language is
+    /// English and the assertions read Indonesian copy.
+    enum Language: String, CaseIterable {
+        case indonesian = "id"
+        case english = "en"
+        case japanese = "ja"
+
+        var locale: String {
+            switch self {
+            case .indonesian: "id_ID"
+            case .english: "en_US"
+            case .japanese: "ja_JP"
+            }
+        }
+
+        /// The two navigation titles the shared helpers wait for.
+        var scanTitle: String {
+            switch self {
+            case .indonesian: "Pindai"
+            case .english: "Scan"
+            case .japanese: "スキャン"
+            }
+        }
+
+        var payTitle: String {
+            switch self {
+            case .indonesian: "Bayar"
+            case .english: "Pay"
+            case .japanese: "会計"
+            }
+        }
+    }
+
     struct Options {
         var offline = false
         var emptyCatalogue = false
         /// A `UIContentSizeCategory` raw value, applied through the launch argument iOS reads.
         var contentSize: String?
         var trialLimit: Int?
+        /// UI language and device locale together, so money and dates are checked against a
+        /// device that would format them differently.
+        var language: Language = .indonesian
     }
 
     /// `UIContentSizeCategory.accessibilityExtraExtraExtraLarge`: SPEC §9 names it by its long form,
@@ -42,6 +78,9 @@ enum UITestApp {
         if let size = options.contentSize {
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", size]
         }
+        app.launchArguments += [
+            "-AppleLanguages", "(\(options.language.rawValue))", "-AppleLocale", options.language.locale,
+        ]
         app.launch()
         return app
     }
@@ -53,7 +92,7 @@ extension XCTestCase {
     /// monitor only runs on an interaction, so the wait taps the bar between checks: the alert can
     /// land before or after any single tap.
     @MainActor
-    func openScannerSheet(_ app: XCUIApplication) -> XCUIElement {
+    func openScannerSheet(_ app: XCUIApplication, language: UITestApp.Language = .indonesian) -> XCUIElement {
         addUIInterruptionMonitor(withDescription: "Camera permission") { alert in
             let allow = alert.buttons.element(boundBy: alert.buttons.count - 1)
             guard allow.exists else { return false }
@@ -63,7 +102,7 @@ extension XCTestCase {
         let scan = app.buttons["SellView.scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 5))
         scan.tap()
-        let bar = app.navigationBars["Pindai"]
+        let bar = app.navigationBars[language.scanTitle]
         XCTAssertTrue(bar.waitForExistence(timeout: 5))
         let entry = app.textFields["ScannerSheet.manualEntry"]
         for _ in 0 ..< 15 where !entry.exists {
@@ -76,12 +115,14 @@ extension XCTestCase {
     /// Types a code into the scan sheet's manual entry, which is the same path a camera read takes,
     /// and closes the sheet.
     @MainActor
-    func scan(_ app: XCUIApplication, code: String) {
-        let entry = openScannerSheet(app)
+    func scan(_ app: XCUIApplication, code: String, language: UITestApp.Language = .indonesian) {
+        let entry = openScannerSheet(app, language: language)
         XCTAssertTrue(entry.exists)
         entry.tap()
         entry.typeText(code + "\n")
-        tap(app.buttons["ScannerSheet.close"], "ScannerSheet.close") { !app.navigationBars["Pindai"].exists }
+        tap(app.buttons["ScannerSheet.close"], "ScannerSheet.close") {
+            !app.navigationBars[language.scanTitle].exists
+        }
     }
 
     /// Ten digits: not an EAN shape, so it is looked up as-is and is unknown, and digits only, so
@@ -144,23 +185,23 @@ extension XCTestCase {
     /// The keypad is a pane on an iPad and a sheet behind Bayar on an iPhone; after this the tender
     /// controls are on screen either way.
     @MainActor
-    func openTender(_ app: XCUIApplication) {
+    func openTender(_ app: XCUIApplication, language: UITestApp.Language = .indonesian) {
         if element(app, "SellView.tenderPane").exists {
             return
         }
-        tap(app.buttons["SellView.pay"], "SellView.pay") { app.navigationBars["Bayar"].exists }
+        tap(app.buttons["SellView.pay"], "SellView.pay") { app.navigationBars[language.payTitle].exists }
     }
 
     /// Scans the fixture item, pays with a quick-tender chip and starts the next sale.
     @MainActor
-    func ringUpFixtureSale(_ app: XCUIApplication, chip: String = "5000") {
-        scan(app, code: UITestApp.fixtureBarcode)
+    func ringUpFixtureSale(_ app: XCUIApplication, chip: String = "5000", language: UITestApp.Language = .indonesian) {
+        scan(app, code: UITestApp.fixtureBarcode, language: language)
         XCTAssertTrue(app.buttons["SellView.line.W001"].waitForExistence(timeout: 5))
-        openTender(app)
+        openTender(app, language: language)
         let newSale = app.buttons["TenderView.newSale"]
         tap(app.buttons["Tender.chip.\(chip)"], "chip \(chip)") { newSale.exists }
         tap(newSale, "TenderView.newSale") { !newSale.exists }
-        XCTAssertTrue(app.navigationBars["Bayar"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars[language.payTitle].waitForNonExistence(timeout: 5))
     }
 
     /// The first close-out of a fresh store: the opening float is asked for.

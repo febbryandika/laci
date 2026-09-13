@@ -88,9 +88,13 @@ struct SellCartPane: View {
         Section {
             SellSearchField(viewModel: viewModel, focus: focus, onSubmit: onSearchSubmit)
             if let notice = viewModel.scanNotice {
-                Label(ScanNoticeText.label(notice), systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-                    .accessibilityIdentifier("SellView.scanNotice")
+                Label {
+                    Text(ScanNoticeText.label(notice))
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle")
+                }
+                .foregroundStyle(.red)
+                .accessibilityIdentifier("SellView.scanNotice")
             }
         }
     }
@@ -181,8 +185,8 @@ private struct CartRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(line.cart.name)
                 HStack(spacing: 4) {
-                    Text(line.cart.quantity, format: MoneyFormat.plain)
-                    Text("×")
+                    Text(verbatim: line.cart.quantity.formatted(MoneyFormat.plain))
+                    Text(verbatim: "×")
                     MoneyText(line.cart.unitPrice)
                 }
                 .font(.subheadline)

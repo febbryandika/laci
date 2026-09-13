@@ -130,7 +130,7 @@ private struct CatalogueRow: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(product.name)
-                Text("\(product.sku) · \(product.unit)")
+                Text(verbatim: "\(product.sku) · \(product.unit)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
