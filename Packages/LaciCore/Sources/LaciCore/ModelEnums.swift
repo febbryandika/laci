@@ -22,7 +22,11 @@ public enum Attribution: String, Hashable, Sendable, CaseIterable {
 public enum Symbology: String, Hashable, Sendable, CaseIterable {
     case ean13 = "org.gs1.EAN-13"
     case ean8 = "org.gs1.EAN-8"
+    case upce = "org.gs1.UPC-E"
     case code128 = "org.iso.Code128"
+    case code39 = "org.iso.Code39"
+    case itf14 = "org.gs1.ITF14"
+    case qrCode = "org.iso.QRCode"
 }
 
 public extension SchemaV1.Sale {
