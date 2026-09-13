@@ -49,12 +49,16 @@ struct Dependencies {
 @main
 struct LaciApp: App {
     @State private var session: AppSession
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let session = AppSession.live()
         // SPEC §7.3: the shop switches the printer on at 7am and Laci is already connected at the
         // first sale, not after someone opens Settings.
         session.dependencies.printer.start()
+        // SPEC §5.3: the charging-time backup. Registration must precede the end of launch.
+        BackupScheduler.register(service: session.backups)
+        session.backups.onAutomaticChanged = { BackupScheduler.schedule(enabled: $0) }
         _session = State(initialValue: session)
     }
 
@@ -62,6 +66,11 @@ struct LaciApp: App {
         WindowGroup {
             RootView()
                 .environment(session)
+                .onChange(of: scenePhase) {
+                    if scenePhase == .background {
+                        BackupScheduler.schedule(enabled: session.backups.automaticEnabled)
+                    }
+                }
         }
     }
 }

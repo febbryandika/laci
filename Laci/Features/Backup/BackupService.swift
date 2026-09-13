@@ -138,6 +138,11 @@ final class BackupService {
         return true
     }
 
+    /// The scheduled run: the same archive, with nothing shown, and never a restore.
+    func runScheduled() async -> Bool {
+        await backupNow()
+    }
+
     func refreshArchives() async {
         guard let archiver = await resolveArchiver() else {
             archives = []
