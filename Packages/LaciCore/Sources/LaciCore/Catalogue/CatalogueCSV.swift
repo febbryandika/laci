@@ -91,15 +91,12 @@ public enum CatalogueCSV {
     }
 
     public static func export(_ rows: [CatalogueRow], delimiter: Character = ",") -> String {
-        var lines = [columns.joined(separator: String(delimiter))]
-        for row in rows {
-            let fields = [
+        CSVWriter.document(columns: columns, rows: rows.map { row in
+            [
                 row.sku, row.name, row.unit, "\(row.cost)", "\(row.price)", row.tracksStock ? "true" : "false",
                 "\(row.stockOnHand)", row.barcodes.joined(separator: "|"),
             ]
-            lines.append(fields.map { quoteIfNeeded($0, delimiter: delimiter) }.joined(separator: String(delimiter)))
-        }
-        return lines.joined(separator: "\n") + "\n"
+        }, delimiter: delimiter)
     }
 
     // MARK: - Decoding
@@ -165,11 +162,6 @@ public enum CatalogueCSV {
             ))
             return false
         }
-    }
-
-    private static func quoteIfNeeded(_ field: String, delimiter: Character) -> String {
-        guard field.contains(where: { $0 == delimiter || $0 == "\"" || $0.isNewline }) else { return field }
-        return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 }
 
