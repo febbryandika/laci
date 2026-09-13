@@ -43,12 +43,26 @@ struct TenderContent: View {
         _acknowledgedSaleID = State(initialValue: viewModel.lastSale?.id)
     }
 
+    /// One scroll view for both states: a container swapped under a sheet mid-checkout has been
+    /// seen to come back with no size until the next update.
     var body: some View {
-        if let completed {
-            TenderCompletedView(sale: completed, printer: printer, onNewSale: newSale)
-        } else {
-            form
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if let completed {
+                    TenderCompletedView(sale: completed, printer: printer, onNewSale: newSale)
+                } else {
+                    formContent
+                }
+            }
+            .padding()
         }
+        .safeAreaInset(edge: .bottom) {
+            if completed == nil {
+                payButton
+            }
+        }
+        .onChange(of: method) { viewModel.clearTenderError() }
+        .onDisappear { viewModel.clearTenderError() }
     }
 
     /// Derived, not set on checkout: a ⌘⏎ checkout that never touched this view still shows here.
@@ -57,25 +71,18 @@ struct TenderContent: View {
         return sale
     }
 
-    private var form: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                methodPicker
-                switch method {
-                case .cash: cashSection
-                case .qris, .transfer: nonCashSection
-                }
-                if let error = viewModel.tenderError {
-                    message(for: error)
-                        .foregroundStyle(.red)
-                        .accessibilityIdentifier("TenderView.error")
-                }
-            }
-            .padding()
+    @ViewBuilder
+    private var formContent: some View {
+        methodPicker
+        switch method {
+        case .cash: cashSection
+        case .qris, .transfer: nonCashSection
         }
-        .safeAreaInset(edge: .bottom) { payButton }
-        .onChange(of: method) { viewModel.clearTenderError() }
-        .onDisappear { viewModel.clearTenderError() }
+        if let error = viewModel.tenderError {
+            message(for: error)
+                .foregroundStyle(.red)
+                .accessibilityIdentifier("TenderView.error")
+        }
     }
 
     private var methodPicker: some View {

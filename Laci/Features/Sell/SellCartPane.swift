@@ -80,8 +80,8 @@ struct SellCartPane: View {
             Button("Cetak ulang") { printer.reprint(saleID: failed.id) }
                 .accessibilityIdentifier("SellView.reprint")
             Button("Tutup") { printer.dismissFailure() }
+                .accessibilityIdentifier("SellView.dismissPrintFailure")
         }
-        .accessibilityIdentifier("SellView.printFailure")
     }
 
     private var searchSection: some View {

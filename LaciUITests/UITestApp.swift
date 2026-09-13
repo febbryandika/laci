@@ -81,12 +81,98 @@ extension XCTestCase {
         XCTAssertTrue(entry.exists)
         entry.tap()
         entry.typeText(code + "\n")
-        app.buttons["ScannerSheet.close"].tap()
+        tap(app.buttons["ScannerSheet.close"], "ScannerSheet.close") { !app.navigationBars["Pindai"].exists }
     }
 
     /// Ten digits: not an EAN shape, so it is looked up as-is and is unknown, and digits only, so
     /// the software keyboard CI types on needs no plane switching.
     func unknownCode() -> String {
         "77\(Int.random(in: 10_000_000 ... 99_999_999))"
+    }
+
+    /// Every tap goes through here. A tap synthesized while a sheet is still sliding away is
+    /// dropped by SwiftUI and XCTest does not count that moment as busy, so a tap that has an
+    /// observable outcome states it and is retried until the outcome shows.
+    @MainActor
+    func tap(
+        _ element: XCUIElement, _ name: String = "", attempts: Int = 3, until outcome: (() -> Bool)? = nil
+    ) {
+        XCTAssertTrue(element.waitForExistence(timeout: 5), name)
+        for _ in 0 ..< 10 where !element.isHittable {
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        guard let outcome else {
+            element.tap()
+            return
+        }
+        for attempt in 1 ... attempts {
+            element.tap()
+            for _ in 0 ..< 15 {
+                if outcome() {
+                    return
+                }
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+            XCTContext.runActivity(named: "tap \(name) attempt \(attempt) had no effect") { _ in }
+        }
+        XCTFail("\(name): no effect after \(attempts) taps")
+    }
+
+    /// A toolbar button that pushes a screen with the given title.
+    @MainActor
+    func push(_ app: XCUIApplication, _ identifier: String, title: String) {
+        tap(app.buttons[identifier], identifier) { app.navigationBars[title].exists }
+    }
+
+    /// Any element by identifier, whatever its type: a Section, a DisclosureGroup or a Picker
+    /// does not surface as a button.
+    @MainActor
+    func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    /// Scrolls a form in small steps until the element is on screen, as a List only lays out the
+    /// rows it shows.
+    @MainActor
+    func scrollTo(_ app: XCUIApplication, _ element: XCUIElement) {
+        for _ in 0 ..< 6 where !(element.exists && element.isHittable) {
+            app.swipeUp(velocity: .slow)
+        }
+        XCTAssertTrue(element.waitForExistence(timeout: 5))
+    }
+
+    /// The keypad is a pane on an iPad and a sheet behind Bayar on an iPhone; after this the tender
+    /// controls are on screen either way.
+    @MainActor
+    func openTender(_ app: XCUIApplication) {
+        if element(app, "SellView.tenderPane").exists {
+            return
+        }
+        tap(app.buttons["SellView.pay"], "SellView.pay") { app.navigationBars["Bayar"].exists }
+    }
+
+    /// Scans the fixture item, pays with a quick-tender chip and starts the next sale.
+    @MainActor
+    func ringUpFixtureSale(_ app: XCUIApplication, chip: String = "5000") {
+        scan(app, code: UITestApp.fixtureBarcode)
+        XCTAssertTrue(app.buttons["SellView.line.W001"].waitForExistence(timeout: 5))
+        openTender(app)
+        let newSale = app.buttons["TenderView.newSale"]
+        tap(app.buttons["Tender.chip.\(chip)"], "chip \(chip)") { newSale.exists }
+        tap(newSale, "TenderView.newSale") { !newSale.exists }
+        XCTAssertTrue(app.navigationBars["Bayar"].waitForNonExistence(timeout: 5))
+    }
+
+    /// The first close-out of a fresh store: the opening float is asked for.
+    @MainActor
+    func openCloseOut(_ app: XCUIApplication, openingFloat: String, counted: String) {
+        push(app, "SellView.closeOut", title: "Tutup kas")
+        let opening = app.textFields["CloseOutView.openingFloat"]
+        XCTAssertTrue(opening.waitForExistence(timeout: 5))
+        opening.tap()
+        opening.typeText(openingFloat)
+        let countedField = app.textFields["CloseOutView.counted"]
+        countedField.tap()
+        countedField.typeText(counted)
     }
 }

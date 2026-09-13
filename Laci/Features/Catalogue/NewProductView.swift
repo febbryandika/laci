@@ -62,6 +62,7 @@ struct NewProductView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Batal") { dismiss() }
                         .keyboardShortcut(.cancelAction)
+                        .accessibilityIdentifier("NewProductView.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Simpan") {

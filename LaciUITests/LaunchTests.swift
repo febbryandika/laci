@@ -112,7 +112,7 @@ final class LaunchTests: XCTestCase {
         let app = UITestApp.launch()
         app.buttons["SellView.settings"].tap()
         let backupNow = app.buttons["SettingsView.backupNow"]
-        XCTAssertTrue(backupNow.waitForExistence(timeout: 5))
+        scrollTo(app, backupNow)
         backupNow.tap()
         // The rows below the button sit past the bottom of an iPhone screen, and a List only
         // exposes the rows it has laid out; scroll in small steps so the status row is not
@@ -162,6 +162,6 @@ final class LaunchTests: XCTestCase {
         app.typeText(code + "\n")
         XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.textFields["NewProductView.sku"].value as? String, code)
-        app.buttons["Batal"].tap()
+        app.buttons["NewProductView.cancel"].tap()
     }
 }
