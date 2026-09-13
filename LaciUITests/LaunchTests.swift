@@ -32,25 +32,38 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Tutup kas"].waitForExistence(timeout: 5))
     }
 
-    /// The simulator has no camera, so the sheet must land on the manual-entry state (SPEC §9:
-    /// never a black rectangle). A camera permission alert, if one appears, is allowed.
+    /// Opens the scan sheet and returns the manual-entry field once the sheet has settled. The
+    /// simulator has no camera but does ask for permission on first use, and an interruption
+    /// monitor only runs on an interaction, so the wait taps the bar between checks: the alert can
+    /// land before or after any single tap.
     @MainActor
-    func testScannerSheetShowsManualEntryWithoutCamera() {
-        let app = XCUIApplication()
+    private func openScannerSheet(_ app: XCUIApplication) -> XCUIElement {
         addUIInterruptionMonitor(withDescription: "Camera permission") { alert in
             let allow = alert.buttons.element(boundBy: alert.buttons.count - 1)
             guard allow.exists else { return false }
             allow.tap()
             return true
         }
-        app.launch()
         let scan = app.buttons["SellView.scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 5))
         scan.tap()
-        XCTAssertTrue(app.navigationBars["Pindai"].waitForExistence(timeout: 5))
-        // Interruption monitors run on the next interaction.
-        app.navigationBars["Pindai"].tap()
-        XCTAssertTrue(app.textFields["ScannerSheet.manualEntry"].waitForExistence(timeout: 10))
+        let bar = app.navigationBars["Pindai"]
+        XCTAssertTrue(bar.waitForExistence(timeout: 5))
+        let entry = app.textFields["ScannerSheet.manualEntry"]
+        for _ in 0 ..< 15 where !entry.exists {
+            bar.tap()
+            _ = entry.waitForExistence(timeout: 1)
+        }
+        return entry
+    }
+
+    /// The simulator has no camera, so the sheet must land on the manual-entry state (SPEC §9:
+    /// never a black rectangle).
+    @MainActor
+    func testScannerSheetShowsManualEntryWithoutCamera() {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(openScannerSheet(app).exists)
     }
 
     /// Ten digits: not an EAN shape, so it is looked up as-is and is unknown, and digits only, so
@@ -67,9 +80,8 @@ final class LaunchTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         let code = unknownCode()
-        app.buttons["SellView.scan"].tap()
-        let entry = app.textFields["ScannerSheet.manualEntry"]
-        XCTAssertTrue(entry.waitForExistence(timeout: 10))
+        let entry = openScannerSheet(app)
+        XCTAssertTrue(entry.exists)
         entry.tap()
         entry.typeText(code + "\n")
         XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
