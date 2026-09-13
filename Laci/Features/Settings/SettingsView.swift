@@ -10,6 +10,8 @@ struct SettingsView: View {
         dependencies.printer
     }
 
+    @State private var wedgeEnabled = ScannerSettings.wedgeEnabled()
+
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
     }
@@ -17,6 +19,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             printerSection
+            scannerSection
             diagnosticsSection
         }
         .navigationTitle("Pengaturan")
@@ -48,6 +51,16 @@ struct SettingsView: View {
             Button("Cetak tes") { printer.printTest() }
                 .disabled(!printer.isConnected)
                 .accessibilityIdentifier("SettingsView.testPrint")
+        }
+    }
+
+    /// SPEC §6: the keyboard-wedge path. Off by default, because a focused field on a device with
+    /// no hardware keyboard keeps the software keyboard on the sell screen.
+    private var scannerSection: some View {
+        Section("Pemindai") {
+            Toggle("Scanner Bluetooth (mode keyboard)", isOn: $wedgeEnabled)
+                .onChange(of: wedgeEnabled) { ScannerSettings.save(wedgeEnabled: wedgeEnabled) }
+                .accessibilityIdentifier("SettingsView.wedgeToggle")
         }
     }
 

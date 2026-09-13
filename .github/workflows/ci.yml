@@ -61,6 +61,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: xcodebuild -version
       - run: xcrun simctl list devices available
+      # A cold simulator on the runner has timed out the first XCUITest launch (60 s); booting it
+      # while the build runs keeps that launch inside the limit.
+      - name: Boot the simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '.devices | to_entries[] | select(.key | endswith("iOS-26-5")) | .value[]
+                     | select(.name == "iPhone 17") | .udid' | head -1)
+          test -n "$UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \

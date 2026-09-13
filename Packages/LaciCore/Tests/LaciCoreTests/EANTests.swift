@@ -23,4 +23,13 @@ struct EANTests {
     func notEAN(payload: String) {
         #expect(EAN.validate(payload) == .notEAN)
     }
+
+    @Test("Every symbology the camera can emit maps back from its AVFoundation type string", arguments: [
+        ("org.gs1.EAN-13", Symbology.ean13), ("org.gs1.EAN-8", .ean8), ("org.gs1.UPC-E", .upce),
+        ("org.iso.Code128", .code128), ("org.iso.Code39", .code39), ("org.gs1.ITF14", .itf14),
+        ("org.iso.QRCode", .qrCode),
+    ])
+    func symbologyFromType(raw: String, symbology: Symbology) {
+        #expect(Symbology(rawValue: raw) == symbology)
+    }
 }
