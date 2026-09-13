@@ -60,4 +60,35 @@ struct StockRepositoryTests {
         let movements = try stock.movements(for: "A", limit: 2)
         #expect(movements.map(\.delta) == [2, 1])
     }
+
+    @Test("A manual adjustment keeps the operator's note; a batch never has one")
+    func adjustStoresNote() throws {
+        try products.create(makeProduct("A", stockOnHand: 10))
+        try stock.adjust(sku: "A", delta: 5, reason: .stockIn, occurredAt: epoch, note: "Kiriman supplier")
+        try stock.applyBatch([StockAdjustment(sku: "A", delta: -1)], reason: .stocktake,
+                             occurredAt: epoch.addingTimeInterval(1))
+
+        let movements = try stock.movements(for: "A", limit: 10)
+        #expect(movements.map(\.note) == [nil, "Kiriman supplier"])
+    }
+
+    @Test("A stocktake batch touches only the SKUs it names; an uncounted SKU is not zeroed")
+    func stocktakeBatchLeavesUnscannedUntouched() throws {
+        try products.create(makeProduct("A", stockOnHand: 10))
+        try products.create(makeProduct("B", stockOnHand: 5))
+        try products.create(makeProduct("C", stockOnHand: 8))
+
+        try stock.applyBatch(
+            [StockAdjustment(sku: "A", delta: -3), StockAdjustment(sku: "B", delta: 2)],
+            reason: .stocktake, occurredAt: epoch
+        )
+
+        #expect(try products.product(sku: "A")?.stockOnHand == 7)
+        #expect(try products.product(sku: "B")?.stockOnHand == 7)
+        #expect(try products.product(sku: "C")?.stockOnHand == 8)
+        #expect(try stock.movements(for: "C", limit: 10).isEmpty)
+        let recorded = try stock.movements(for: "A", limit: 10) + stock.movements(for: "B", limit: 10)
+        #expect(recorded.map(\.reasonRaw) == ["stocktake", "stocktake"])
+        #expect(recorded.allSatisfy { $0.saleID == nil && $0.note == nil })
+    }
 }

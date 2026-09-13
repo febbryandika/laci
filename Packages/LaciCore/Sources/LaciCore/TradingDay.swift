@@ -27,4 +27,17 @@ public struct TradingDay: Hashable, Sendable {
         calendar.timeZone = timeZone
         return calendar.date(byAdding: .day, value: 1, to: day) ?? day
     }
+
+    /// Every instant that buckets into the trading days `first` through `last` (both are instants
+    /// anywhere inside those days): from `first`'s day at the cutover hour up to, not including,
+    /// the cutover after `last`'s day. Half-open, so consecutive ranges never share an instant.
+    public func instants(from first: Date, through last: Date, timeZone: TimeZone) -> Range<Date> {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let start = bucket(for: first, timeZone: timeZone)
+        let end = next(after: bucket(for: last, timeZone: timeZone), timeZone: timeZone)
+        let lower = calendar.date(byAdding: .hour, value: cutoverHour, to: start) ?? start
+        let upper = calendar.date(byAdding: .hour, value: cutoverHour, to: end) ?? end
+        return lower ..< max(lower, upper)
+    }
 }

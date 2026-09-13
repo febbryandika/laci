@@ -56,4 +56,30 @@ struct TradingDayTests {
         let expected = try Self.date(2026, expectedMonth, expectedDay, in: Self.jakarta)
         #expect(TradingDay(cutoverHour: 4).next(after: today, timeZone: Self.jakarta) == expected)
     }
+
+    @Test("The instants of a day range run from the first cutover to the cutover after the last day")
+    func instantsSpanCutover() throws {
+        let policy = TradingDay(cutoverHour: 4)
+        let range = try policy.instants(
+            from: Self.date(2026, 9, 12, 15, in: Self.jakarta), through: Self.date(2026, 9, 13, 9, in: Self.jakarta),
+            timeZone: Self.jakarta
+        )
+        #expect(try range.lowerBound == Self.date(2026, 9, 12, 4, in: Self.jakarta))
+        #expect(try range.upperBound == Self.date(2026, 9, 14, 4, in: Self.jakarta))
+        #expect(try range.contains(Self.date(2026, 9, 14, 1, in: Self.jakarta)))
+        #expect(try !range.contains(Self.date(2026, 9, 14, 4, in: Self.jakarta)))
+        #expect(try !range.contains(Self.date(2026, 9, 12, 3, 59, in: Self.jakarta)))
+    }
+
+    @Test("An instant before the cutover still selects its own trading day as the range start")
+    func instantsBucketTheEndpoints() throws {
+        let policy = TradingDay(cutoverHour: 4)
+        // 01:00 on the 13th is trading day the 12th.
+        let range = try policy.instants(
+            from: Self.date(2026, 9, 13, 1, in: Self.jakarta), through: Self.date(2026, 9, 13, 1, in: Self.jakarta),
+            timeZone: Self.jakarta
+        )
+        #expect(try range.lowerBound == Self.date(2026, 9, 12, 4, in: Self.jakarta))
+        #expect(try range.upperBound == Self.date(2026, 9, 13, 4, in: Self.jakarta))
+    }
 }
