@@ -127,6 +127,8 @@ final class BackupService {
         }
         lastBackupAt = startedAt
         BackupSettings.save(lastBackupAt: startedAt, in: defaults)
+        // A successful backup is the point at which the last restore's safety copy can go.
+        try? archiver.removePreRestoreCopies()
         do {
             try archiver.prune(keeping: BackupArchiver.keep)
             status = .finished(startedAt)
@@ -149,6 +151,42 @@ final class BackupService {
             return
         }
         archives = archiver.list()
+    }
+
+    // MARK: Restoring
+
+    /// A backup from a build with another schema is refused before any file moves.
+    func validate(_ manifest: BackupManifest) throws(BackupError) {
+        guard manifest.schemaVersion == Self.schemaVersion else {
+            throw .incompatibleSchema(found: manifest.schemaVersion)
+        }
+    }
+
+    func stage(_ archive: BackupArchive) throws(BackupError) -> URL {
+        try restoreArchiver(for: archive).stage(archive)
+    }
+
+    func swapIn(stagedStore: URL) throws(BackupError) {
+        try localArchiver.swapIn(stagedStore: stagedStore)
+    }
+
+    func rollbackSwap() throws(BackupError) {
+        try localArchiver.rollbackSwap()
+    }
+
+    var hasPreRestoreCopy: Bool {
+        localArchiver.hasPreRestoreCopy
+    }
+
+    /// The archive's own container, whatever the current location resolves to.
+    private func restoreArchiver(for archive: BackupArchive) -> BackupArchiver {
+        let container = archive.url.deletingLastPathComponent().deletingLastPathComponent()
+        return BackupArchiver(files: files, storeURL: storeURL, containerURL: container, stagingRoot: stagingRoot)
+    }
+
+    /// For the operations that touch only the live store and staging.
+    private var localArchiver: BackupArchiver {
+        BackupArchiver(files: files, storeURL: storeURL, containerURL: stagingRoot, stagingRoot: stagingRoot)
     }
 
     nonisolated static var schemaVersion: String {

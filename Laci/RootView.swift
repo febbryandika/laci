@@ -8,6 +8,25 @@ struct RootView: View {
     var body: some View {
         SellView(dependencies: session.dependencies)
             .id(session.generation)
+            .alert("Pemulihan data", isPresented: noticeShown, presenting: session.restoreNotice) { _ in
+                Button("OK") { session.dismissRestoreNotice() }
+            } message: { notice in
+                switch notice {
+                case let .succeeded(name): Text("Data dipulihkan dari cadangan \(name).")
+                case let .failed(error): Text(BackupErrorText.label(error))
+                }
+            }
+    }
+
+    private var noticeShown: Binding<Bool> {
+        Binding(
+            get: { session.restoreNotice != nil },
+            set: { shown in
+                if !shown {
+                    session.dismissRestoreNotice()
+                }
+            }
+        )
     }
 }
 

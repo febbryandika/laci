@@ -102,6 +102,77 @@ nonisolated struct BackupArchiver: Sendable {
         ((try? files.contentsOfDirectory(backupsURL)) ?? []).filter { $0.pathExtension == Self.archiveExtension }
     }
 
+    // MARK: Restoring
+
+    static let preRestoreSuffix = ".pre-restore"
+
+    static func preRestoreURL(for url: URL) -> URL {
+        url.deletingLastPathComponent().appending(path: url.lastPathComponent + preRestoreSuffix)
+    }
+
+    /// The archive's store files copied into a local staging folder, each checked to be on this
+    /// device first. Returns the staged store's URL.
+    func stage(_ archive: BackupArchive) throws(BackupError) -> URL {
+        let folder = stagingRoot.appending(path: "restore-\(UUID().uuidString)")
+        try restoreStep { try files.createDirectory(folder) }
+        for file in archive.manifest.files {
+            let source = archive.url.appending(path: file.name)
+            guard files.fileExists(source) else { throw .restoreFailed("\(file.name) tidak ada di cadangan") }
+            guard try restoreStep({ try files.isDownloaded(source) }) else { throw .notDownloaded }
+            try restoreStep { try files.copyItem(source, folder.appending(path: file.name)) }
+        }
+        return folder.appending(path: storeURL.lastPathComponent)
+    }
+
+    /// Renames the live set aside as `.pre-restore` and moves the staged set into its place. The
+    /// live `-wal` goes aside too, so nothing of the old store is replayed onto the restored one.
+    func swapIn(stagedStore: URL) throws(BackupError) {
+        try removePreRestoreCopies()
+        for live in Self.companionURLs(of: storeURL) where files.fileExists(live) {
+            try restoreStep { try files.moveItem(live, Self.preRestoreURL(for: live)) }
+        }
+        let folder = storeURL.deletingLastPathComponent()
+        for staged in Self.companionURLs(of: stagedStore) where files.fileExists(staged) {
+            try restoreStep { try files.moveItem(staged, folder.appending(path: staged.lastPathComponent)) }
+        }
+        try? files.removeItem(stagedStore.deletingLastPathComponent())
+    }
+
+    /// Undoes `swapIn`: drops whatever was moved in and puts the `.pre-restore` set back.
+    func rollbackSwap() throws(BackupError) {
+        for live in Self.companionURLs(of: storeURL) {
+            let aside = Self.preRestoreURL(for: live)
+            if files.fileExists(live) {
+                try restoreStep { try files.removeItem(live) }
+            }
+            if files.fileExists(aside) {
+                try restoreStep { try files.moveItem(aside, live) }
+            }
+        }
+    }
+
+    var hasPreRestoreCopy: Bool {
+        files.fileExists(Self.preRestoreURL(for: storeURL))
+    }
+
+    /// The safety copy is kept until the next successful backup, or the next restore.
+    func removePreRestoreCopies() throws(BackupError) {
+        for live in Self.companionURLs(of: storeURL) {
+            let aside = Self.preRestoreURL(for: live)
+            if files.fileExists(aside) {
+                try restoreStep { try files.removeItem(aside) }
+            }
+        }
+    }
+
+    private func restoreStep<T>(_ body: () throws -> T) throws(BackupError) -> T {
+        do {
+            return try body()
+        } catch {
+            throw .restoreFailed(error.localizedDescription)
+        }
+    }
+
     private func step<T>(_ body: () throws -> T) throws(BackupError) -> T {
         do {
             return try body()

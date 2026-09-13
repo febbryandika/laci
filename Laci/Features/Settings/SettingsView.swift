@@ -103,6 +103,10 @@ struct SettingsView: View {
                     .foregroundStyle(backupFailed ? .red : .secondary)
                     .accessibilityIdentifier("SettingsView.backupStatus")
             }
+            NavigationLink("Pulihkan dari cadangan…") {
+                RestoreListView()
+            }
+            .accessibilityIdentifier("SettingsView.restore")
         } header: {
             Text(backups.location?.isLocalFallback == true ? "Cadangan lokal (simulator)" : "Cadangan iCloud")
         } footer: {

@@ -21,8 +21,8 @@ final class PrinterCoordinator {
     private(set) var failedSale: FailedSale?
 
     private let transport: any PrinterTransporting
-    private let sales: any SaleRepository
-    private let products: any ProductRepository
+    private var sales: any SaleRepository
+    private var products: any ProductRepository
     private let defaults: UserDefaults
     private let now: () -> Date
     private let clock = ContinuousClock()
@@ -40,6 +40,14 @@ final class PrinterCoordinator {
         self.now = now
         paperWidth = PrinterSettings.paperWidth(in: defaults)
         remembered = PrinterSettings.remembered(in: defaults)
+    }
+
+    /// After a restore the store is a new container, but the transport's connection stream has
+    /// one consumer and the central one owner, so the coordinator outlives the store and is
+    /// pointed at the new repositories instead of being rebuilt.
+    func rebind(sales: any SaleRepository, products: any ProductRepository) {
+        self.sales = sales
+        self.products = products
     }
 
     var negotiatedMTU: Int? {

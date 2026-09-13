@@ -261,4 +261,89 @@ struct BackupServiceTests {
         #expect(reported == [true, false])
         #expect(BackupSettings.automaticEnabled(in: sandbox.defaults) == false)
     }
+
+    // MARK: Restoring
+
+    @Test("A restore swaps the archived files in and keeps the live ones as a pre-restore copy")
+    func restoreSwapsFilesAndKeepsPreRestoreCopy() async throws {
+        let service = service()
+        #expect(await service.backupNow())
+        try sandbox.write("newer store", to: sandbox.storeURL)
+        try sandbox.write("newer wal", to: sandbox.sidecar("wal"))
+        let archive = try #require(service.archives.first)
+
+        let staged = try service.stage(archive)
+        #expect(staged.lastPathComponent == "Laci.store")
+        #expect(try Data(contentsOf: staged) == Data("store bytes".utf8))
+        try service.swapIn(stagedStore: staged)
+
+        #expect(try Data(contentsOf: sandbox.storeURL) == Data("store bytes".utf8))
+        #expect(try Data(contentsOf: sandbox.sidecar("wal")) == Data("wal bytes!".utf8))
+        #expect(try Data(contentsOf: sandbox.sidecar("shm")) == Data("shm".utf8))
+        let aside = BackupArchiver.preRestoreURL(for: sandbox.storeURL)
+        #expect(try Data(contentsOf: aside) == Data("newer store".utf8))
+        let walAside = BackupArchiver.preRestoreURL(for: sandbox.sidecar("wal"))
+        #expect(try Data(contentsOf: walAside) == Data("newer wal".utf8))
+        #expect(service.hasPreRestoreCopy)
+        #expect(!FileManager.default.fileExists(atPath: staged.deletingLastPathComponent().path(percentEncoded: false)))
+    }
+
+    @Test("A backup from another schema version is refused before any file moves")
+    func restoreRefusesOtherSchemaVersion() {
+        let manifest = BackupManifest(
+            createdAt: clock.now, schemaVersion: "2.0.0", appVersion: "1", build: "1", shopName: "Warung Uji",
+            files: []
+        )
+        #expect(throws: BackupError.incompatibleSchema(found: "2.0.0")) {
+            try service().validate(manifest)
+        }
+        let current = BackupManifest(
+            createdAt: clock.now, schemaVersion: BackupService.schemaVersion, appVersion: "1", build: "1",
+            shopName: "Warung Uji", files: []
+        )
+        #expect(throws: Never.self) {
+            try service().validate(current)
+        }
+    }
+
+    @Test("A rollback drops the swapped-in files and puts the live ones back")
+    func rollbackRestoresLiveFiles() async throws {
+        let service = service()
+        #expect(await service.backupNow())
+        try sandbox.write("newer store", to: sandbox.storeURL)
+        try FileManager.default.removeItem(at: sandbox.sidecar("shm"))
+        let archive = try #require(service.archives.first)
+        try service.swapIn(stagedStore: service.stage(archive))
+        #expect(FileManager.default.fileExists(atPath: sandbox.sidecar("shm").path(percentEncoded: false)))
+
+        try service.rollbackSwap()
+        #expect(try Data(contentsOf: sandbox.storeURL) == Data("newer store".utf8))
+        #expect(!FileManager.default.fileExists(atPath: sandbox.sidecar("shm").path(percentEncoded: false)))
+        #expect(!service.hasPreRestoreCopy)
+    }
+
+    @Test("The next successful backup removes the pre-restore copy")
+    func nextBackupRemovesPreRestoreCopy() async throws {
+        let service = service()
+        #expect(await service.backupNow())
+        let archive = try #require(service.archives.first)
+        try service.swapIn(stagedStore: service.stage(archive))
+        #expect(service.hasPreRestoreCopy)
+        clock.advance(seconds: 60)
+        #expect(await service.backupNow())
+        #expect(!service.hasPreRestoreCopy)
+    }
+
+    @Test("An archive whose bytes are still in iCloud is reported, not half-restored")
+    func notDownloadedIsReported() async throws {
+        let service = service()
+        #expect(await service.backupNow())
+        let archive = try #require(service.archives.first)
+        var pending = BackupFileOperations.live
+        pending.isDownloaded = { $0.lastPathComponent != "Laci.store-wal" }
+        let waiting = self.service(files: pending)
+        #expect(throws: BackupError.notDownloaded) {
+            try waiting.stage(archive)
+        }
+    }
 }

@@ -144,6 +144,40 @@ final class LaunchTests: XCTestCase {
         }
     }
 
+    /// Restore is impossible to trigger by accident (SPEC §5.3): after a backup, the confirm
+    /// button stays disabled until the shop name is typed exactly. The test never confirms.
+    @MainActor
+    func testRestoreConfirmDisabledUntilShopNameTyped() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["SellView.settings"].tap()
+        let backupNow = app.buttons["SettingsView.backupNow"]
+        XCTAssertTrue(backupNow.waitForExistence(timeout: 5))
+        backupNow.tap()
+        // The rows below the button sit past the bottom of an iPhone screen, and a List only
+        // exposes the rows it has laid out.
+        app.swipeUp()
+        let status = app.staticTexts["SettingsView.backupStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10))
+        XCTAssertEqual(status.label, "Cadangan tersimpan.")
+        app.buttons["SettingsView.restore"].tap()
+        XCTAssertTrue(app.navigationBars["Pulihkan cadangan"].waitForExistence(timeout: 5))
+        let archive = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'RestoreView.archive.'"))
+            .firstMatch
+        XCTAssertTrue(archive.waitForExistence(timeout: 5))
+        archive.tap()
+        let confirm = app.buttons["RestoreConfirmView.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        XCTAssertFalse(confirm.isEnabled)
+        let name = app.textFields["RestoreConfirmView.shopName"]
+        name.tap()
+        name.typeText("Warun")
+        XCTAssertFalse(confirm.isEnabled)
+        name.typeText("g")
+        XCTAssertTrue(confirm.isEnabled)
+        app.navigationBars.buttons.firstMatch.tap()
+    }
+
     /// The keyboard-wedge path works with the camera sheet closed: with the toggle on, a payload
     /// plus Return typed at the sell screen reaches the same lookup (SPEC §6).
     @MainActor
