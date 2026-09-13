@@ -3,41 +3,21 @@ import LaciCore
 import LaciMoney
 import SwiftUI
 
-/// The launch screen (SPEC §3.1.1): one column, keyboard only. The three-pane iPad layout is a
-/// later phase and builds on the same view model.
+/// The launch screen (SPEC §3.1.1) and the layout decision (SPEC §9): three panes on an iPad, two
+/// at AX3, and on an iPhone the cart with the catalogue and the keypad as sheets. Everything the
+/// panes share (the view model, the sheet, the focus, the pushed screens) is owned here.
 struct SellView: View {
-    private enum Sheet: Identifiable, Hashable {
-        case editLine(sku: String)
-        case saleDiscount
-        case tender
-        case scanner
-        case newProduct(PendingBarcode)
-        case paywall
-
-        var id: String {
-            switch self {
-            case let .editLine(sku): "line-\(sku)"
-            case .saleDiscount: "discount"
-            case .tender: "tender"
-            case .scanner: "scanner"
-            case let .newProduct(pending): "new-\(pending.value)"
-            case .paywall: "paywall"
-            }
-        }
-    }
-
-    private enum Field: Hashable {
-        case wedge
-        case search
-    }
-
     private let dependencies: Dependencies
     private let unlock: UnlockStore
     @State private var viewModel: SellViewModel
-    @State private var sheet: Sheet?
-    @FocusState private var focus: Field?
+    @State private var sheet: SellSheet?
+    @State private var path: [SellRoute] = []
+    @FocusState private var focus: SellField?
     @State private var wedgeEnabled = false
     @State private var isVisible = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(dependencies: Dependencies, unlock: UnlockStore) {
         self.dependencies = dependencies
@@ -45,231 +25,101 @@ struct SellView: View {
         _viewModel = State(initialValue: SellViewModel(dependencies: dependencies, unlock: unlock))
     }
 
+    private var layout: SellLayout {
+        SellLayout.resolve(
+            horizontal: horizontalSizeClass, vertical: verticalSizeClass, dynamicTypeSize: dynamicTypeSize
+        )
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                if let openPriorDay = viewModel.openPriorDay {
-                    openDaySection(openPriorDay)
-                }
-                if let failed = dependencies.printer.failedSale {
-                    printFailureSection(failed)
-                }
-                searchSection
-                if !viewModel.query.isEmpty {
-                    resultsSection
-                }
-                cartSection
-                totalsSection
-            }
-            .navigationTitle("Jual")
-            .toolbar {
-                ToolbarItem {
-                    Button {
-                        sheet = .scanner
-                    } label: {
-                        Label("Pindai", systemImage: "barcode.viewfinder")
-                    }
-                    .accessibilityIdentifier("SellView.scan")
-                }
-                ToolbarItem {
-                    NavigationLink {
-                        CloseOutView(dependencies: dependencies)
-                    } label: {
-                        Label("Tutup kas", systemImage: "tray.and.arrow.down")
-                    }
-                    .accessibilityIdentifier("SellView.closeOut")
-                }
-                ToolbarItem {
-                    NavigationLink {
-                        SalesHistoryView(dependencies: dependencies)
-                    } label: {
-                        Label("Riwayat", systemImage: "clock")
-                    }
-                    .accessibilityIdentifier("SellView.history")
-                }
-                ToolbarItem {
-                    NavigationLink {
-                        StocktakeView(dependencies: dependencies)
-                    } label: {
-                        Label("Stok opname", systemImage: "list.clipboard")
-                    }
-                    .accessibilityIdentifier("SellView.stocktake")
-                }
-                ToolbarItem {
-                    NavigationLink {
-                        SettingsView(dependencies: dependencies)
-                    } label: {
-                        Label("Pengaturan", systemImage: "gearshape")
-                    }
-                    .accessibilityIdentifier("SellView.settings")
-                }
-            }
-            .safeAreaInset(edge: .bottom) { payButton }
-            .sheet(item: $sheet) { sheet in
-                switch sheet {
-                case let .editLine(sku): CartLineEditor(sku: sku, viewModel: viewModel)
-                case .saleDiscount: SaleDiscountEditor(viewModel: viewModel)
-                case .tender: TenderView(viewModel: viewModel, printer: dependencies.printer)
-                case .scanner: ScannerSheet(viewModel: viewModel)
-                case let .newProduct(pending):
-                    NewProductView(pending: pending, dependencies: dependencies) { product in
-                        viewModel.loadCatalogue()
-                        viewModel.add(product)
-                        self.sheet = nil
-                    }
-                case .paywall: PaywallView(unlock: unlock, origin: .checkout)
-                }
-            }
-            // Always present, so focus can be given to it during a navigation transition; the
-            // Settings toggle only decides whether it is ever focused.
-            .overlay(alignment: .topLeading) { wedgeField }
-            .scanFeedback(trigger: viewModel.scansAccepted, isActive: sheet == nil)
-            .task { viewModel.loadCatalogue() }
-            // `onAppear`, not `task`: coming back from the close-out screen must drop the banner,
-            // and coming back from Settings must pick up the wedge toggle.
-            .onAppear {
-                viewModel.refreshCloseOutStatus()
-                wedgeEnabled = ScannerSettings.wedgeEnabled()
-                isVisible = true
-                focusWedge()
-            }
-            .onDisappear { isVisible = false }
-            // An unknown code swaps whichever sheet is up for the create form (SPEC §3.1.2).
-            .onChange(of: viewModel.pendingBarcode) {
-                if let pending = viewModel.pendingBarcode {
-                    sheet = .newProduct(pending)
-                }
-            }
-            .onChange(of: sheet) {
-                if sheet == nil {
-                    // Cleared here rather than on save, so cancelling the form also lets the same
-                    // code trigger it again.
-                    viewModel.clearPendingBarcode()
+        NavigationStack(path: $path) {
+            layoutBody
+                .navigationTitle("Jual")
+                .navigationBarTitleDisplayMode(layout == .compact ? .automatic : .inline)
+                .navigationDestination(for: SellRoute.self) { destination($0) }
+                .toolbar { toolbar }
+                .sheet(item: $sheet) { sheetContent($0) }
+                // Always present, so focus can be given to it during a navigation transition; the
+                // Settings toggle only decides whether it is ever focused.
+                .overlay(alignment: .topLeading) { wedgeField }
+                .scanFeedback(trigger: viewModel.scansAccepted, isActive: sheet == nil)
+                .task { viewModel.loadCatalogue() }
+                // `onAppear`, not `task`: coming back from the close-out screen must drop the
+                // banner, and coming back from Settings must pick up the wedge toggle.
+                .onAppear {
+                    viewModel.refreshCloseOutStatus()
+                    wedgeEnabled = ScannerSettings.wedgeEnabled()
+                    isVisible = true
                     focusWedge()
                 }
-            }
-        }
-    }
-
-    /// SPEC §3.3.5: a day with no close-out stays open and banners on launch.
-    private func openDaySection(_ day: Date) -> some View {
-        Section {
-            NavigationLink {
-                CloseOutView(dependencies: dependencies)
-            } label: {
-                Label("Hari \(day.formatted(DateFormat.day)) belum ditutup", systemImage: "exclamationmark.triangle")
-            }
-            .accessibilityIdentifier("SellView.openDay")
-        }
-    }
-
-    /// SPEC §7.3: a failed print is a row, not a dialog. The sale is already saved.
-    private func printFailureSection(_ failed: FailedSale) -> some View {
-        Section {
-            Label("Struk #\(failed.number) gagal dicetak", systemImage: "printer.slash")
-            Button("Cetak ulang") { dependencies.printer.reprint(saleID: failed.id) }
-                .accessibilityIdentifier("SellView.reprint")
-            Button("Tutup") { dependencies.printer.dismissFailure() }
-        }
-        .accessibilityIdentifier("SellView.printFailure")
-    }
-
-    private var searchSection: some View {
-        Section {
-            TextField("Cari produk atau SKU", text: $viewModel.query)
-                .focused($focus, equals: .search)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .submitLabel(.done)
-                .onSubmit {
-                    viewModel.addFirstResult()
-                    focusWedge()
-                }
-                .accessibilityIdentifier("SellView.search")
-            if let notice = viewModel.scanNotice {
-                Label(ScanNoticeText.label(notice), systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.red)
-                    .accessibilityIdentifier("SellView.scanNotice")
-            }
-        }
-    }
-
-    private var resultsSection: some View {
-        Section("Hasil") {
-            if viewModel.catalogueFailed {
-                Text("Katalog tidak bisa dibuka")
-            } else if viewModel.catalogue.isEmpty {
-                Text("Katalog kosong")
-            } else if viewModel.results.isEmpty {
-                Text("Tidak ditemukan")
-            } else {
-                ForEach(viewModel.results.prefix(20), id: \.sku) { product in
-                    Button {
-                        viewModel.add(product)
-                        viewModel.query = ""
-                    } label: {
-                        LabeledContent(product.name) {
-                            MoneyText(product.price)
-                        }
+                .onDisappear { isVisible = false }
+                // An unknown code swaps whichever sheet is up for the create form (SPEC §3.1.2).
+                .onChange(of: viewModel.pendingBarcode) {
+                    if let pending = viewModel.pendingBarcode {
+                        sheet = .newProduct(pending)
                     }
-                    .tint(.primary)
                 }
-            }
-        }
-    }
-
-    private var cartSection: some View {
-        Section("Keranjang") {
-            if viewModel.lines.isEmpty {
-                Text("Keranjang kosong").foregroundStyle(.secondary)
-            }
-            ForEach(viewModel.lines, id: \.cart.sku) { line in
-                Button {
-                    sheet = .editLine(sku: line.cart.sku)
-                } label: {
-                    CartRow(line: line, total: viewModel.lineTotal(for: line))
+                .onChange(of: sheet) {
+                    if sheet == nil {
+                        // Cleared here rather than on save, so cancelling the form also lets the
+                        // same code trigger it again.
+                        viewModel.clearPendingBarcode()
+                        focusWedge()
+                    }
                 }
-                .tint(.primary)
-            }
-            .onDelete { offsets in
-                for sku in offsets.map({ viewModel.lines[$0].cart.sku }) {
-                    viewModel.remove(sku: sku)
-                }
-            }
         }
     }
 
-    private var totalsSection: some View {
-        Section {
-            amountRow("Subtotal", viewModel.totals.subtotal)
-            if viewModel.totals.lineDiscounts > .zero {
-                amountRow("Diskon baris", viewModel.totals.lineDiscounts)
+    @ViewBuilder
+    private var layoutBody: some View {
+        switch layout {
+        case .threePane:
+            HStack(spacing: 0) {
+                SellCataloguePane(viewModel: viewModel, focus: $focus, onAdd: focusWedge)
+                    .frame(minWidth: 240, idealWidth: 320, maxWidth: 400)
+                Divider()
+                cartPane(showsSearch: false)
+                Divider()
+                tenderPane.frame(width: 320)
             }
-            Button {
-                sheet = .saleDiscount
-            } label: {
-                amountRow("Diskon penjualan", viewModel.totals.saleDiscount)
+        case .twoPane:
+            HStack(spacing: 0) {
+                cartPane(showsSearch: true)
+                Divider()
+                tenderPane.frame(width: 400)
             }
-            .tint(.primary)
-            .disabled(viewModel.lines.isEmpty)
-            amountRow("Total", viewModel.totals.grandTotal).bold()
-            amountRow("Tunai (dibulatkan)", viewModel.cashTotal)
+        case .compact:
+            cartPane(showsSearch: true)
+                .safeAreaInset(edge: .bottom) { payButton }
         }
     }
 
-    private func amountRow(_ label: LocalizedStringKey, _ amount: Money) -> some View {
-        LabeledContent(label) {
-            MoneyText(amount).monospacedDigit()
-        }
+    private func cartPane(showsSearch: Bool) -> some View {
+        SellCartPane(
+            viewModel: viewModel, printer: dependencies.printer, showsSearch: showsSearch, sheet: $sheet,
+            focus: $focus, onSearchSubmit: focusWedge
+        )
+        .frame(maxWidth: .infinity)
     }
 
+    private var tenderPane: some View {
+        TenderContent(
+            viewModel: viewModel, printer: dependencies.printer, style: .inline, focus: $focus,
+            presentPaywall: { sheet = .paywall }, onNewSale: focusWedge
+        )
+        .background(Color(.systemGroupedBackground))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("SellView.tenderPane")
+    }
+
+    /// The iPhone's way into the keypad sheet. SPEC §5.1: the entitlement is checked here and at
+    /// the pane's own button, nowhere else.
     private var payButton: some View {
         Button {
-            // SPEC §5.1: the entitlement is checked here and nowhere else.
             sheet = viewModel.isCheckoutLocked() ? .paywall : .tender
         } label: {
             Text("Bayar")
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: 60)
         }
         .buttonStyle(.borderedProminent)
         .disabled(viewModel.lines.isEmpty)
@@ -277,10 +127,82 @@ struct SellView: View {
         .background(.bar)
         .accessibilityIdentifier("SellView.pay")
     }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem {
+            Button {
+                sheet = .scanner
+            } label: {
+                Label("Pindai", systemImage: "barcode.viewfinder")
+            }
+            .accessibilityIdentifier("SellView.scan")
+        }
+        ToolbarItem {
+            Button {
+                path.append(.closeOut)
+            } label: {
+                Label("Tutup kas", systemImage: "tray.and.arrow.down")
+            }
+            .keyboardShortcut("l")
+            .accessibilityIdentifier("SellView.closeOut")
+        }
+        ToolbarItem {
+            Button {
+                path.append(.history)
+            } label: {
+                Label("Riwayat", systemImage: "clock")
+            }
+            .accessibilityIdentifier("SellView.history")
+        }
+        ToolbarItem {
+            Button {
+                path.append(.stocktake)
+            } label: {
+                Label("Stok opname", systemImage: "list.clipboard")
+            }
+            .accessibilityIdentifier("SellView.stocktake")
+        }
+        ToolbarItem {
+            Button {
+                path.append(.settings)
+            } label: {
+                Label("Pengaturan", systemImage: "gearshape")
+            }
+            .accessibilityIdentifier("SellView.settings")
+        }
+    }
+
+    @ViewBuilder
+    private func destination(_ route: SellRoute) -> some View {
+        switch route {
+        case .closeOut: CloseOutView(dependencies: dependencies)
+        case .history: SalesHistoryView(dependencies: dependencies)
+        case .stocktake: StocktakeView(dependencies: dependencies)
+        case .settings: SettingsView(dependencies: dependencies)
+        }
+    }
+
+    @ViewBuilder
+    private func sheetContent(_ sheet: SellSheet) -> some View {
+        switch sheet {
+        case let .editLine(sku): CartLineEditor(sku: sku, viewModel: viewModel)
+        case .saleDiscount: SaleDiscountEditor(viewModel: viewModel)
+        case .tender: TenderView(viewModel: viewModel, printer: dependencies.printer, focus: $focus)
+        case .scanner: ScannerSheet(viewModel: viewModel)
+        case let .newProduct(pending):
+            NewProductView(pending: pending, dependencies: dependencies) { product in
+                viewModel.loadCatalogue()
+                viewModel.add(product)
+                self.sheet = nil
+            }
+        case .paywall: PaywallView(unlock: unlock, origin: .checkout)
+        }
+    }
 }
 
 private extension SellView {
-    private var wedgeField: some View {
+    var wedgeField: some View {
         WedgeField(focus: $focus, field: .wedge, identifier: "SellView.wedge") {
             viewModel.didRead(code: $0, symbology: nil)
         }
@@ -288,7 +210,7 @@ private extension SellView {
 
     /// Only while this screen is showing with no sheet up, so a pushed or presented screen's own
     /// fields are never fought for focus.
-    private func focusWedge() {
+    func focusWedge() {
         guard wedgeEnabled, isVisible, sheet == nil else { return }
         focus = .wedge
         // `onAppear` runs while the navigation pop is still animating, and a focus request made
@@ -298,36 +220,6 @@ private extension SellView {
             if wedgeEnabled, isVisible, sheet == nil, focus == nil {
                 focus = .wedge
             }
-        }
-    }
-}
-
-private struct CartRow: View {
-    let line: SaleDraft.Line
-    let total: LineTotal
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(line.cart.name)
-                HStack(spacing: 4) {
-                    Text(line.cart.quantity, format: MoneyFormat.plain)
-                    Text("×")
-                    MoneyText(line.cart.unitPrice)
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                if total.discount > .zero {
-                    HStack(spacing: 4) {
-                        Text("Diskon")
-                        MoneyText(total.discount)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-            MoneyText(total.net).monospacedDigit()
         }
     }
 }
