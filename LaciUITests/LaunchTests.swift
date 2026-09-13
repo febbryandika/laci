@@ -53,13 +53,20 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.textFields["ScannerSheet.manualEntry"].waitForExistence(timeout: 10))
     }
 
+    /// Ten digits: not an EAN shape, so it is looked up as-is and is unknown, and digits only, so
+    /// the software keyboard CI types on needs no plane switching. Random, so the persisted store
+    /// never already owns it.
+    private func unknownCode() -> String {
+        "77\(Int.random(in: 10_000_000 ... 99_999_999))"
+    }
+
     /// Manual entry of an unknown code opens "create SKU with this barcode" prefilled, and saving
-    /// puts the new product in the cart (SPEC §3.1.2). A random code keeps the persisted store fresh.
+    /// puts the new product in the cart (SPEC §3.1.2).
     @MainActor
     func testUnknownCodeFromManualEntryCreatesProductIntoCart() {
         let app = XCUIApplication()
         app.launch()
-        let code = "UI-\(Int.random(in: 100_000 ... 999_999))"
+        let code = unknownCode()
         app.buttons["SellView.scan"].tap()
         let entry = app.textFields["ScannerSheet.manualEntry"]
         XCTAssertTrue(entry.waitForExistence(timeout: 10))
@@ -91,7 +98,7 @@ final class LaunchTests: XCTestCase {
         }
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.textFields["SellView.wedge"].waitForExistence(timeout: 5))
-        let code = "UI-\(Int.random(in: 100_000 ... 999_999))"
+        let code = unknownCode()
         // No tap: the hidden field is focused by the screen, which is what a wedge relies on.
         app.typeText(code + "\n")
         XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
