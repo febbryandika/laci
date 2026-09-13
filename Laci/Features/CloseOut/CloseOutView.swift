@@ -160,6 +160,9 @@ struct CloseOutView: View {
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Selisih lebih dari \(thresholdText) wajib diberi catatan.")
+                    .accessibilityLabel(Text(
+                        "Selisih lebih dari \(threshold, format: MoneyFormat.spoken) wajib diberi catatan."
+                    ))
                 Text("Setoran dicatat sebagai pengeluaran; modal awal besok adalah uang dihitung dikurangi setoran.")
             }
         }
@@ -181,13 +184,17 @@ struct CloseOutView: View {
         }
     }
 
+    private var threshold: Decimal {
+        ShopDefaults.discrepancyThreshold.amount
+    }
+
     private var thresholdText: Text {
-        Text(ShopDefaults.discrepancyThreshold.amount, format: MoneyFormat.rupiah)
+        Text(threshold, format: MoneyFormat.rupiah)
     }
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Money) -> some View {
         LabeledContent(label) {
-            Text(amount.amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(amount).monospacedDigit()
         }
     }
 
@@ -218,7 +225,7 @@ struct PayoutRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(payout.amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(payout.amount).monospacedDigit()
         }
     }
 }

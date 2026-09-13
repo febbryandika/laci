@@ -209,7 +209,7 @@ struct SellView: View {
                         viewModel.query = ""
                     } label: {
                         LabeledContent(product.name) {
-                            Text(product.price, format: MoneyFormat.rupiah)
+                            MoneyText(product.price)
                         }
                     }
                     .tint(.primary)
@@ -259,7 +259,7 @@ struct SellView: View {
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Money) -> some View {
         LabeledContent(label) {
-            Text(amount.amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(amount).monospacedDigit()
         }
     }
 
@@ -313,21 +313,21 @@ private struct CartRow: View {
                 HStack(spacing: 4) {
                     Text(line.cart.quantity, format: MoneyFormat.plain)
                     Text("×")
-                    Text(line.cart.unitPrice.amount, format: MoneyFormat.rupiah)
+                    MoneyText(line.cart.unitPrice)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 if total.discount > .zero {
                     HStack(spacing: 4) {
                         Text("Diskon")
-                        Text(total.discount.amount, format: MoneyFormat.rupiah)
+                        MoneyText(total.discount)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 }
             }
             Spacer()
-            Text(total.net.amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(total.net).monospacedDigit()
         }
     }
 }

@@ -73,7 +73,7 @@ struct TenderView: View {
     private var cashSections: some View {
         Section {
             LabeledContent("Total tunai") {
-                Text(viewModel.cashTotal.amount, format: MoneyFormat.rupiah).bold()
+                MoneyText(viewModel.cashTotal).bold()
             }
         }
         Section("Uang diterima") {
@@ -83,7 +83,7 @@ struct TenderView: View {
                     Button {
                         checkoutCash(amount)
                     } label: {
-                        Text(amount.amount, format: MoneyFormat.rupiah)
+                        MoneyText(amount)
                             .frame(maxWidth: .infinity, minHeight: 60)
                     }
                     .buttonStyle(.bordered)
@@ -95,7 +95,7 @@ struct TenderView: View {
             if let tendered {
                 if let settlement = viewModel.settle(tendered: tendered) {
                     LabeledContent("Kembalian") {
-                        Text(settlement.change.amount, format: MoneyFormat.rupiah).bold()
+                        MoneyText(settlement.change).bold()
                     }
                 } else {
                     Text("Uang kurang").foregroundStyle(.red)
@@ -123,7 +123,7 @@ struct TenderView: View {
     private func nonCashSections(_ method: NonCashMethod) -> some View {
         Section {
             LabeledContent("Total") {
-                Text(viewModel.totals.grandTotal.amount, format: MoneyFormat.rupiah).bold()
+                MoneyText(viewModel.totals.grandTotal).bold()
             }
             TextField("Nomor referensi", text: $reference)
                 .textInputAutocapitalization(.characters)
@@ -149,10 +149,10 @@ struct TenderView: View {
         Form {
             Section {
                 LabeledContent("Penjualan") { Text("#\(sale.number)") }
-                LabeledContent("Total") { Text(sale.total, format: MoneyFormat.rupiah) }
+                LabeledContent("Total") { MoneyText(sale.total) }
                 if let change = sale.changeGiven {
                     LabeledContent("Kembalian") {
-                        Text(change, format: MoneyFormat.rupiah).bold()
+                        MoneyText(change).bold()
                     }
                 }
                 if let reference = sale.reference {
@@ -183,10 +183,13 @@ struct TenderView: View {
         }
     }
 
-    private func message(for error: TenderError) -> Text {
+    @ViewBuilder
+    private func message(for error: TenderError) -> some View {
         switch error {
         case .emptyCart: Text("Keranjang kosong")
-        case let .cashShort(rounded): Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.rupiah)")
+        case let .cashShort(rounded):
+            Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.rupiah)")
+                .accessibilityLabel(Text("Uang kurang dari \(rounded.amount, format: MoneyFormat.spoken)"))
         case .missingReference: Text("Nomor referensi wajib diisi")
         case .commitFailed: Text("Penjualan gagal disimpan, coba lagi")
         case .locked: Text("Masa percobaan habis. Buka Laci dari tombol Bayar atau Pengaturan.")

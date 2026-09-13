@@ -153,7 +153,10 @@ final class LaunchTests: XCTestCase {
             toggle.switches.firstMatch.tap()
         }
         app.navigationBars.buttons.firstMatch.tap()
-        XCTAssertTrue(app.textFields["SellView.wedge"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["SellView.search"].waitForExistence(timeout: 5))
+        // The hidden field is off the accessibility tree, so it cannot be waited on; the screen
+        // re-asserts its focus 600 ms after the pop, and the typing must land after that.
+        Thread.sleep(forTimeInterval: 1.5)
         let code = unknownCode()
         // No tap: the hidden field is focused by the screen, which is what a wedge relies on.
         app.typeText(code + "\n")

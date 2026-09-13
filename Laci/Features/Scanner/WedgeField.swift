@@ -23,6 +23,8 @@ struct WedgeField<Field: Hashable>: View {
             }
             .frame(width: 1, height: 1)
             .opacity(0.02)
+            // Not a VoiceOver stop: there is nothing to see, and a wedge types into it unseen.
+            .accessibilityHidden(true)
             .accessibilityIdentifier(identifier)
     }
 }

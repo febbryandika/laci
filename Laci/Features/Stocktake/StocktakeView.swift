@@ -132,7 +132,7 @@ struct StocktakeView: View {
     private var totalSection: some View {
         Section {
             LabeledContent("Total selisih (modal)") {
-                Text(viewModel.totalVarianceValue.amount, format: MoneyFormat.rupiah)
+                MoneyText(viewModel.totalVarianceValue)
                     .monospacedDigit()
                     .foregroundStyle(viewModel.totalVarianceValue < .zero ? .red : .primary)
                     .accessibilityIdentifier("StocktakeView.total")
@@ -198,7 +198,7 @@ private struct StocktakeRowView: View {
                 if let variance = row.variance, let value = row.varianceValue {
                     Text(variance, format: MoneyFormat.plain.sign(strategy: .always(includingZero: false)))
                         .monospacedDigit()
-                    Text(value.amount, format: MoneyFormat.rupiah)
+                    MoneyText(value)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(value < .zero ? .red : .secondary)

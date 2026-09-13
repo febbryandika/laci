@@ -6,6 +6,12 @@ enum MoneyFormat {
     static let rupiah = Decimal.FormatStyle.Currency(code: "IDR", locale: ShopDefaults.locale)
         .precision(.fractionLength(0 ... 2))
 
+    /// The VoiceOver form (SPEC §9): "15.000 Rupiah Indonesia" is announced as an amount, where
+    /// "Rp 15.000" can be spelled out letter by letter.
+    static let spoken = Decimal.FormatStyle.Currency(code: "IDR", locale: ShopDefaults.locale)
+        .presentation(.fullName)
+        .precision(.fractionLength(0 ... 2))
+
     /// Plain digits for read-back into text fields; no grouping, so "12400" is what the cashier typed.
     static let plain = Decimal.FormatStyle.number.locale(ShopDefaults.locale).grouping(.never)
 }
