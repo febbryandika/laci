@@ -30,8 +30,20 @@ public struct CatalogueRow: Hashable, Sendable {
 }
 
 public struct ImportRejection: Hashable, Sendable {
+    /// Why one field of a row could not be read. Structured, not a message: the wording lives in
+    /// the app's string catalog, and LaciCore never carries user-facing text.
+    public enum MalformedReason: Hashable, Sendable {
+        case columnCount(expected: Int, found: Int)
+        case emptySKU
+        case emptyName
+        case costNotDecimal
+        case priceNotDecimal
+        case tracksStockNotBool
+        case stockNotDecimal
+    }
+
     public enum Reason: Hashable, Sendable {
-        case malformed(String)
+        case malformed(MalformedReason)
         case duplicateSKUInFile
         case barcodeDuplicatedInFile(value: String)
         case invalidBarcode(value: String)
@@ -108,14 +120,14 @@ public enum CatalogueCSV {
             .rejected(ImportRejection(line: record.line, sku: sku, reason: reason))
         }
         guard fields.count == columns.count else {
-            return reject(.malformed("expected \(columns.count) columns, found \(fields.count)"))
+            return reject(.malformed(.columnCount(expected: columns.count, found: fields.count)))
         }
-        guard let sku else { return reject(.malformed("sku is empty")) }
-        guard !fields[1].isEmpty else { return reject(.malformed("name is empty")) }
-        guard let cost = decimal(fields[3]) else { return reject(.malformed("cost is not a decimal")) }
-        guard let price = decimal(fields[4]) else { return reject(.malformed("price is not a decimal")) }
-        guard let tracksStock = bool(fields[5]) else { return reject(.malformed("tracks_stock is not true/false")) }
-        guard let stock = decimal(fields[6]) else { return reject(.malformed("stock_on_hand is not a decimal")) }
+        guard let sku else { return reject(.malformed(.emptySKU)) }
+        guard !fields[1].isEmpty else { return reject(.malformed(.emptyName)) }
+        guard let cost = decimal(fields[3]) else { return reject(.malformed(.costNotDecimal)) }
+        guard let price = decimal(fields[4]) else { return reject(.malformed(.priceNotDecimal)) }
+        guard let tracksStock = bool(fields[5]) else { return reject(.malformed(.tracksStockNotBool)) }
+        guard let stock = decimal(fields[6]) else { return reject(.malformed(.stockNotDecimal)) }
         let barcodes = fields[7].split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         if let bad = barcodes.first(where: { Symbology.inferred(from: $0) == nil }) {

@@ -48,8 +48,12 @@ public struct Codepage: Sendable {
 
     private static let foldingLocale = Locale(identifier: "en_US")
 
+    /// Kana and kanji have no ASCII stand-in and fold to one `?` each in `fold`, so a Japanese
+    /// name keeps its column width. The three Japanese punctuation marks that do have a stand-in
+    /// are listed here so "コーヒー　豆" reads as "?-?- ?" rather than "????".
     static let folds: [Character: String] = [
         "×": "x", "–": "-", "—": "-", "“": "\"", "”": "\"", "‘": "'", "’": "'",
         "…": "...", "→": "->", "•": "*", "€": "EUR", "\u{00A0}": " ",
+        "\u{3000}": " ", "ー": "-", "・": ".",
     ]
 }

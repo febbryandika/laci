@@ -36,6 +36,25 @@ struct ReceiptRendererTests {
         }
     }
 
+    @Test("A Japanese product name prints as a same-width ? run, clipped, never wrapped", arguments: [
+        PaperWidth.mm58, .mm80,
+    ])
+    func japaneseName(paper: PaperWidth) throws {
+        let receipt = try sampleReceipt(extraLine: Receipt.Line(
+            name: "醤油 キッコーマン 特選丸大豆 １Ｌ ペットボトル", quantity: 1, unit: "本",
+            unitPrice: Money(25000), discount: .zero
+        ))
+        let lines = receiptText(ReceiptRenderer.render(receipt, paper: paper))
+        for line in lines {
+            #expect(line.count <= paper.columns, "\(line)")
+            #expect(line.unicodeScalars.allSatisfy { (0x20 ... 0x7E).contains($0.value) }, "\(line)")
+        }
+        let name = try #require(lines.first { $0.hasPrefix("?? ???-??") })
+        #expect(name.count == paper.columns)
+        #expect(name.hasSuffix(". ") || name.hasSuffix(" "), "clipped with a dot or padded: \(name)")
+        #expect(lines.contains { $0.hasPrefix("  1 ? x Rp 25.000") })
+    }
+
     @Test("Header, number, date, lines, totals, cash tender and footer appear in order")
     func cashReceipt() throws {
         let lines = try receiptText(ReceiptRenderer.render(sampleReceipt(), paper: .mm58))

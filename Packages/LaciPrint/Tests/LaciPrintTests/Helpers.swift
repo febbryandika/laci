@@ -34,7 +34,8 @@ func sampleReceipt(
     taxTotal: Money = .zero,
     taxRate: Decimal? = nil,
     isReprint: Bool = false,
-    logo: MonoBitmap? = nil
+    logo: MonoBitmap? = nil,
+    extraLine: Receipt.Line? = nil
 ) throws -> Receipt {
     try Receipt(
         shopName: "Warung Bu Sari",
@@ -59,7 +60,7 @@ func sampleReceipt(
                 name: "Gula Pasir Gulaku 1kg", quantity: dec("0.5"), unit: "kg",
                 unitPrice: Money(18000), discount: .zero
             ),
-        ],
+        ] + (extraLine.map { [$0] } ?? []),
         subtotal: Money(85500),
         saleDiscount: Money(1250),
         taxTotal: taxTotal,
