@@ -17,13 +17,23 @@ struct Dependencies {
 
     @MainActor
     private init(container: ModelContainer, transport: any PrinterTransporting) {
+        self.init(container: container) { sales, products in
+            PrinterCoordinator(transport: transport, sales: sales, products: products)
+        }
+    }
+
+    @MainActor
+    private init(
+        container: ModelContainer,
+        printer: (_ sales: any SaleRepository, _ products: any ProductRepository) -> PrinterCoordinator
+    ) {
         self.container = container
         transactor = Transactor(container: container)
         products = SwiftDataProductRepository(transactor: transactor)
         sales = SwiftDataSaleRepository(transactor: transactor)
         stock = SwiftDataStockRepository(transactor: transactor)
         closeOuts = SwiftDataCloseOutRepository(transactor: transactor)
-        printer = PrinterCoordinator(transport: transport, sales: sales, products: products)
+        self.printer = printer(sales, products)
     }
 
     /// The on-disk store. A POS that cannot open its store cannot sell, and there is nothing
@@ -44,22 +54,52 @@ struct Dependencies {
     ) throws -> Dependencies {
         try Dependencies(container: Store.container(inMemory: true), transport: transport)
     }
+
+    /// A store at any path, for the restore tests; the app itself uses `Store.storeURL`.
+    @MainActor
+    static func onDisk(
+        at url: URL, printer transport: any PrinterTransporting = UnavailablePrinterTransport()
+    ) throws -> Dependencies {
+        try Dependencies(container: Store.container(at: url), transport: transport)
+    }
+
+    /// After a restore: the store at `url` opened afresh, every repository rebuilt on it, and the
+    /// printer coordinator kept and rebound rather than rebuilt (SPEC §7.3: one central, one
+    /// connection stream).
+    @MainActor
+    static func reopened(at url: URL, keeping printer: PrinterCoordinator) throws -> Dependencies {
+        try Dependencies(container: Store.container(at: url)) { sales, products in
+            printer.rebind(sales: sales, products: products)
+            return printer
+        }
+    }
 }
 
 @main
 struct LaciApp: App {
-    private let dependencies: Dependencies
+    @State private var session: AppSession
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        dependencies = Dependencies.live()
+        let session = AppSession.live()
         // SPEC §7.3: the shop switches the printer on at 7am and Laci is already connected at the
         // first sale, not after someone opens Settings.
-        dependencies.printer.start()
+        session.dependencies.printer.start()
+        // SPEC §5.3: the charging-time backup. Registration must precede the end of launch.
+        BackupScheduler.register(service: session.backups)
+        session.backups.onAutomaticChanged = { BackupScheduler.schedule(enabled: $0) }
+        _session = State(initialValue: session)
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView(dependencies: dependencies)
+            RootView()
+                .environment(session)
+                .onChange(of: scenePhase) {
+                    if scenePhase == .background {
+                        BackupScheduler.schedule(enabled: session.backups.automaticEnabled)
+                    }
+                }
         }
     }
 }

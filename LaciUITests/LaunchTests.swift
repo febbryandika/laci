@@ -96,6 +96,88 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Produk Uji"].waitForExistence(timeout: 5))
     }
 
+    /// A product created through manual entry can be counted on the stocktake screen by typing
+    /// its code (SPEC §3.2): the row shows the name and a count of one.
+    @MainActor
+    func testStocktakeTypedCodeAddsRow() {
+        let app = XCUIApplication()
+        app.launch()
+        let code = unknownCode()
+        let entry = openScannerSheet(app)
+        entry.tap()
+        entry.typeText(code + "\n")
+        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
+        let name = app.textFields["NewProductView.name"]
+        name.tap()
+        name.typeText("Produk Hitung")
+        let price = app.textFields["NewProductView.price"]
+        price.tap()
+        price.typeText("2500")
+        app.buttons["NewProductView.save"].tap()
+        XCTAssertTrue(app.staticTexts["Produk Hitung"].waitForExistence(timeout: 5))
+
+        let stocktake = app.buttons["SellView.stocktake"]
+        XCTAssertTrue(stocktake.waitForExistence(timeout: 5))
+        stocktake.tap()
+        XCTAssertTrue(app.navigationBars["Stok opname"].waitForExistence(timeout: 5))
+        let field = app.textFields["StocktakeView.code"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText(code + "\n")
+        XCTAssertTrue(app.staticTexts["Produk Hitung"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["StocktakeView.counted.\(code)"].value as? String, "1")
+        XCTAssertTrue(app.buttons["StocktakeView.apply"].isEnabled)
+    }
+
+    /// The export screen is behind Settings (SPEC §5.2) and offers the four files.
+    @MainActor
+    func testExportScreenIsReachable() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["SellView.settings"].tap()
+        let export = app.buttons["SettingsView.export"]
+        XCTAssertTrue(export.waitForExistence(timeout: 5))
+        export.tap()
+        XCTAssertTrue(app.navigationBars["Ekspor CSV"].waitForExistence(timeout: 5))
+        for kind in ["sales", "sale_lines", "stock_movements", "close_outs"] {
+            XCTAssertTrue(app.buttons["ExportView.\(kind)"].exists, kind)
+        }
+    }
+
+    /// Restore is impossible to trigger by accident (SPEC §5.3): after a backup, the confirm
+    /// button stays disabled until the shop name is typed exactly. The test never confirms.
+    @MainActor
+    func testRestoreConfirmDisabledUntilShopNameTyped() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["SellView.settings"].tap()
+        let backupNow = app.buttons["SettingsView.backupNow"]
+        XCTAssertTrue(backupNow.waitForExistence(timeout: 5))
+        backupNow.tap()
+        // The rows below the button sit past the bottom of an iPhone screen, and a List only
+        // exposes the rows it has laid out.
+        app.swipeUp()
+        let status = app.staticTexts["SettingsView.backupStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10))
+        XCTAssertEqual(status.label, "Cadangan tersimpan.")
+        app.buttons["SettingsView.restore"].tap()
+        XCTAssertTrue(app.navigationBars["Pulihkan cadangan"].waitForExistence(timeout: 5))
+        let archive = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'RestoreView.archive.'"))
+            .firstMatch
+        XCTAssertTrue(archive.waitForExistence(timeout: 5))
+        archive.tap()
+        let confirm = app.buttons["RestoreConfirmView.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        XCTAssertFalse(confirm.isEnabled)
+        let name = app.textFields["RestoreConfirmView.shopName"]
+        name.tap()
+        name.typeText("Warun")
+        XCTAssertFalse(confirm.isEnabled)
+        name.typeText("g")
+        XCTAssertTrue(confirm.isEnabled)
+        app.navigationBars.buttons.firstMatch.tap()
+    }
+
     /// The keyboard-wedge path works with the camera sheet closed: with the toggle on, a payload
     /// plus Return typed at the sell screen reaches the same lookup (SPEC §6).
     @MainActor

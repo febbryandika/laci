@@ -45,6 +45,9 @@ public protocol SaleRepository: AnyObject {
     func sale(number: Int) throws -> Sale?
     /// By sale number.
     func sales(on tradingDay: Date, limit: Int) throws -> [Sale]
+    /// Every sale whose trading day lies in `first`...`last` (both buckets, inclusive), by number.
+    /// Voided sales and refunds are included: an export is a record, not a report (SPEC §5.2).
+    func sales(tradingDaysFrom first: Date, through last: Date) throws -> [Sale]
     /// Newest first, keyset-paged: the sales numbered below `number`, or the newest when nil.
     func recent(before number: Int?, limit: Int) throws -> [Sale]
     /// The non-voided refunds of a sale, by number.
@@ -115,6 +118,13 @@ public final class SwiftDataSaleRepository: SaleRepository {
         )
         descriptor.fetchLimit = limit
         return try context.fetch(descriptor)
+    }
+
+    public func sales(tradingDaysFrom first: Date, through last: Date) throws -> [Sale] {
+        try context.fetch(FetchDescriptor<Sale>(
+            predicate: #Predicate { $0.tradingDay >= first && $0.tradingDay <= last },
+            sortBy: [SortDescriptor(\.number)]
+        ))
     }
 
     public func recent(before number: Int?, limit: Int) throws -> [Sale] {

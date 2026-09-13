@@ -43,10 +43,12 @@ func makeProduct(
 let jakarta = TimeZone(identifier: "Asia/Jakarta")!
 
 /// A wall-clock instant in the shop's zone (WIB), never the device zone.
-func wib(_ year: Int, _ month: Int, _ day: Int, _ hour: Int = 0, _ minute: Int = 0) throws -> Date {
+func wib(
+    _ year: Int, _ month: Int, _ day: Int, _ hour: Int = 0, _ minute: Int = 0, second: Int = 0
+) throws -> Date {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = jakarta
-    let components = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute)
+    let components = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
     return try #require(calendar.date(from: components))
 }
 

@@ -250,4 +250,14 @@ struct CloseOutRepositoryTests {
             try closeOuts.setAttribution(on: ninth, .bug)
         }
     }
+
+    @Test("A close-out range is inclusive at both ends, oldest first")
+    func closeOutsRangeInclusive() throws {
+        for day in 8 ... 12 {
+            try closeOuts.save(closeOut(day: wib(2026, 9, day)), cashRemoved: 0)
+        }
+        let found = try closeOuts.closeOuts(from: wib(2026, 9, 9), through: wib(2026, 9, 11))
+        #expect(try found.map(\.tradingDay) == [wib(2026, 9, 9), wib(2026, 9, 10), wib(2026, 9, 11)])
+        #expect(try closeOuts.closeOuts(from: wib(2026, 9, 13), through: wib(2026, 9, 14)).isEmpty)
+    }
 }

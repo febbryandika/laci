@@ -5,6 +5,8 @@ import SwiftData
 public protocol CloseOutRepository: AnyObject {
     func closeOut(on tradingDay: Date) throws -> CloseOut?
     func latest() throws -> CloseOut?
+    /// Every close-out whose trading day lies in `first`...`last` (inclusive), oldest first.
+    func closeOuts(from first: Date, through last: Date) throws -> [CloseOut]
     /// A day cannot be closed twice (SPEC §3.3.5). `discrepancy` arrives computed and is stored as-is.
     /// `cashRemoved` is the closing setoran (SPEC §3.3.4): taken out after the count, so it is not in
     /// `closeOut.payouts`; when non-zero it is recorded as a setoran `Payout` dated `closedAt`, in the
@@ -52,6 +54,13 @@ public final class SwiftDataCloseOutRepository: CloseOutRepository {
         var descriptor = FetchDescriptor<CloseOut>(sortBy: [SortDescriptor(\.tradingDay, order: .reverse)])
         descriptor.fetchLimit = 1
         return try context.fetch(descriptor).first
+    }
+
+    public func closeOuts(from first: Date, through last: Date) throws -> [CloseOut] {
+        try context.fetch(FetchDescriptor<CloseOut>(
+            predicate: #Predicate { $0.tradingDay >= first && $0.tradingDay <= last },
+            sortBy: [SortDescriptor(\.tradingDay)]
+        ))
     }
 
     public func save(_ closeOut: CloseOut, cashRemoved: Decimal) throws {

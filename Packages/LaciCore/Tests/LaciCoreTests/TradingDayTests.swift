@@ -56,4 +56,30 @@ struct TradingDayTests {
         let expected = try Self.date(2026, expectedMonth, expectedDay, in: Self.jakarta)
         #expect(TradingDay(cutoverHour: 4).next(after: today, timeZone: Self.jakarta) == expected)
     }
+
+    @Test("The instants of a day range run from the first cutover to the cutover after the last day")
+    func instantsSpanCutover() throws {
+        let policy = TradingDay(cutoverHour: 4)
+        let range = try policy.instants(
+            ofDays: Self.date(2026, 9, 12, in: Self.jakarta), through: Self.date(2026, 9, 13, in: Self.jakarta),
+            timeZone: Self.jakarta
+        )
+        #expect(try range.lowerBound == Self.date(2026, 9, 12, 4, in: Self.jakarta))
+        #expect(try range.upperBound == Self.date(2026, 9, 14, 4, in: Self.jakarta))
+        #expect(try range.contains(Self.date(2026, 9, 14, 1, in: Self.jakarta)))
+        #expect(try !range.contains(Self.date(2026, 9, 14, 4, in: Self.jakarta)))
+        #expect(try !range.contains(Self.date(2026, 9, 12, 3, 59, in: Self.jakarta)))
+    }
+
+    @Test("A single day is one cutover-to-cutover span, and an inverted range is empty")
+    func instantsOfOneDay() throws {
+        let policy = TradingDay(cutoverHour: 4)
+        let day = try Self.date(2026, 9, 13, in: Self.jakarta)
+        let range = policy.instants(ofDays: day, through: day, timeZone: Self.jakarta)
+        #expect(try range.lowerBound == Self.date(2026, 9, 13, 4, in: Self.jakarta))
+        #expect(try range.upperBound == Self.date(2026, 9, 14, 4, in: Self.jakarta))
+        let inverted = try policy.instants(ofDays: day, through: Self.date(2026, 9, 10, in: Self.jakarta),
+                                           timeZone: Self.jakarta)
+        #expect(inverted.isEmpty)
+    }
 }

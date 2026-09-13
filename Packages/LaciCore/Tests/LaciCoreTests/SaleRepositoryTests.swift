@@ -131,6 +131,21 @@ struct SaleRepositoryTests {
                                   occurredAt: wib(2026, 9, 10, 12))
         #expect(throws: CoreError.settlementMismatch) { try commit(draft) }
     }
+
+    @Test("A trading-day range is inclusive at both ends and follows the cutover, by number")
+    func salesRangeIsInclusiveOfBothDays() throws {
+        // Cutover 02:00: 01:00 on the 11th is trading day the 10th.
+        let before = try commit(cashDraft([line("U", price: 3000)], occurredAt: wib(2026, 9, 9, 12)))
+        let first = try commit(cashDraft([line("U", price: 3000)], occurredAt: wib(2026, 9, 10, 12)))
+        let late = try commit(cashDraft([line("U", price: 3000)], occurredAt: wib(2026, 9, 11, 1)))
+        let last = try commit(cashDraft([line("U", price: 3000)], occurredAt: wib(2026, 9, 12, 12)))
+        let after = try commit(cashDraft([line("U", price: 3000)], occurredAt: wib(2026, 9, 13, 12)))
+        try sales.void(saleID: late.id, reason: "salah", occurredAt: wib(2026, 9, 11, 2))
+
+        let found = try sales.sales(tradingDaysFrom: wib(2026, 9, 10), through: wib(2026, 9, 12))
+        #expect(found.map(\.number) == [first.number, late.number, last.number])
+        #expect(!found.contains { $0.id == before.id || $0.id == after.id })
+    }
 }
 
 @MainActor

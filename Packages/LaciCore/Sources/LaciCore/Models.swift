@@ -3,7 +3,8 @@ import SwiftData
 
 /// Schema V1 is what ships to TestFlight (SPEC §4). Every later change gets a new `VersionedSchema`
 /// and a `MigrationStage`; until then V1 is edited in place. `Payout` and `CloseOut.cashRefunds` were
-/// added in Phase 6 for SPEC §3.3.4 and §8.4; `Sale.receiptFailedAt` in Phase 8 for SPEC §7.3.
+/// added in Phase 6 for SPEC §3.3.4 and §8.4; `Sale.receiptFailedAt` in Phase 8 for SPEC §7.3;
+/// `StockMovement.note` in Phase 10 for manual adjustments (SPEC §3.2).
 public enum SchemaV1: VersionedSchema {
     public static var versionIdentifier: Schema.Version {
         Schema.Version(1, 0, 0)
@@ -133,13 +134,19 @@ public enum SchemaV1: VersionedSchema {
         public var reasonRaw: String // "sale" | "void" | "stock_in" | "stocktake" | "waste"
         public var occurredAt: Date
         public var saleID: UUID?
+        /// Why a manual `stock_in` or `waste` happened; nil for every movement the app records itself.
+        public var note: String?
 
-        public init(productSKU: String, delta: Decimal, reason: MovementReason, occurredAt: Date, saleID: UUID?) {
+        public init(
+            productSKU: String, delta: Decimal, reason: MovementReason, occurredAt: Date, saleID: UUID?,
+            note: String? = nil
+        ) {
             self.productSKU = productSKU
             self.delta = delta
             reasonRaw = reason.rawValue
             self.occurredAt = occurredAt
             self.saleID = saleID
+            self.note = note
         }
     }
 

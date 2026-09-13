@@ -60,4 +60,52 @@ struct StockRepositoryTests {
         let movements = try stock.movements(for: "A", limit: 2)
         #expect(movements.map(\.delta) == [2, 1])
     }
+
+    @Test("A manual adjustment keeps the operator's note; a batch never has one")
+    func adjustStoresNote() throws {
+        try products.create(makeProduct("A", stockOnHand: 10))
+        try stock.adjust(sku: "A", delta: 5, reason: .stockIn, occurredAt: epoch, note: "Kiriman supplier")
+        try stock.applyBatch([StockAdjustment(sku: "A", delta: -1)], reason: .stocktake,
+                             occurredAt: epoch.addingTimeInterval(1))
+
+        let movements = try stock.movements(for: "A", limit: 10)
+        #expect(movements.map(\.note) == [nil, "Kiriman supplier"])
+    }
+
+    @Test("A stocktake batch touches only the SKUs it names; an uncounted SKU is not zeroed")
+    func stocktakeBatchLeavesUnscannedUntouched() throws {
+        try products.create(makeProduct("A", stockOnHand: 10))
+        try products.create(makeProduct("B", stockOnHand: 5))
+        try products.create(makeProduct("C", stockOnHand: 8))
+
+        try stock.applyBatch(
+            [StockAdjustment(sku: "A", delta: -3), StockAdjustment(sku: "B", delta: 2)],
+            reason: .stocktake, occurredAt: epoch
+        )
+
+        #expect(try products.product(sku: "A")?.stockOnHand == 7)
+        #expect(try products.product(sku: "B")?.stockOnHand == 7)
+        #expect(try products.product(sku: "C")?.stockOnHand == 8)
+        #expect(try stock.movements(for: "C", limit: 10).isEmpty)
+        let recorded = try stock.movements(for: "A", limit: 10) + stock.movements(for: "B", limit: 10)
+        #expect(recorded.map(\.reasonRaw) == ["stocktake", "stocktake"])
+        #expect(recorded.allSatisfy { $0.saleID == nil && $0.note == nil })
+    }
+
+    @Test("A movement range is half-open: the start instant is in, the end instant is out")
+    func movementsRangeIsHalfOpen() throws {
+        try products.create(makeProduct("B", stockOnHand: 10))
+        try products.create(makeProduct("A", stockOnHand: 10))
+        let start = epoch.addingTimeInterval(100)
+        let end = epoch.addingTimeInterval(200)
+        try stock.adjust(sku: "A", delta: 1, reason: .stockIn, occurredAt: epoch.addingTimeInterval(99))
+        try stock.adjust(sku: "B", delta: 2, reason: .stockIn, occurredAt: start)
+        try stock.adjust(sku: "A", delta: 3, reason: .stockIn, occurredAt: start)
+        try stock.adjust(sku: "A", delta: 4, reason: .waste, occurredAt: epoch.addingTimeInterval(150))
+        try stock.adjust(sku: "A", delta: 5, reason: .stockIn, occurredAt: end)
+
+        let found = try stock.movements(from: start, before: end)
+        #expect(found.map(\.delta) == [3, 2, 4])
+        #expect(found.map(\.productSKU) == ["A", "B", "A"])
+    }
 }

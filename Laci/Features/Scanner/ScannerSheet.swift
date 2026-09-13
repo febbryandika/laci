@@ -12,7 +12,7 @@ struct ScannerSheet: View {
         case failed(ScanError)
     }
 
-    let viewModel: SellViewModel
+    let viewModel: any ScanReceiving
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var phase: Phase = .scanning
@@ -146,6 +146,8 @@ enum ScanNoticeText {
         switch notice {
         case .scanAgain: "Pindai ulang: barcode tidak terbaca dengan benar"
         case .lookupFailed: "Tidak bisa mencari produk"
+        case .unknownProduct: "Barcode tidak dikenal"
+        case .untrackedProduct: "Produk ini tidak melacak stok"
         }
     }
 }

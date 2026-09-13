@@ -15,9 +15,18 @@ public struct StockAdjustment: Hashable, Sendable {
 public protocol StockRepository: AnyObject {
     /// Newest first.
     func movements(for sku: String, limit: Int) throws -> [StockMovement]
-    func adjust(sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date) throws
-    /// Applied as one batch or not at all (SPEC §3.2).
+    /// Every movement with `start <= occurredAt < end`, oldest first, then by SKU.
+    func movements(from start: Date, before end: Date) throws -> [StockMovement]
+    /// One manual movement; `note` is the operator's reason and is stored verbatim.
+    func adjust(sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date, note: String?) throws
+    /// Applied as one batch or not at all (SPEC §3.2). Batch movements carry no note.
     func applyBatch(_ adjustments: [StockAdjustment], reason: MovementReason, occurredAt: Date) throws
+}
+
+public extension StockRepository {
+    func adjust(sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date) throws {
+        try adjust(sku: sku, delta: delta, reason: reason, occurredAt: occurredAt, note: nil)
+    }
 }
 
 @MainActor
@@ -40,20 +49,36 @@ public final class SwiftDataStockRepository: StockRepository {
         return try context.fetch(descriptor)
     }
 
-    public func adjust(sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date) throws {
-        try applyBatch([StockAdjustment(sku: sku, delta: delta)], reason: reason, occurredAt: occurredAt)
+    public func movements(from start: Date, before end: Date) throws -> [StockMovement] {
+        try context.fetch(FetchDescriptor<StockMovement>(
+            predicate: #Predicate { $0.occurredAt >= start && $0.occurredAt < end },
+            sortBy: [SortDescriptor(\.occurredAt), SortDescriptor(\.productSKU)]
+        ))
+    }
+
+    public func adjust(
+        sku: String, delta: Decimal, reason: MovementReason, occurredAt: Date, note: String?
+    ) throws {
+        try transactor.perform {
+            try move(StockAdjustment(sku: sku, delta: delta), reason: reason, occurredAt: occurredAt, note: note)
+        }
     }
 
     public func applyBatch(_ adjustments: [StockAdjustment], reason: MovementReason, occurredAt: Date) throws {
         try transactor.perform {
             for adjustment in adjustments {
-                let product = try context.requireProduct(sku: adjustment.sku)
-                product.stockOnHand += adjustment.delta
-                context.insert(StockMovement(
-                    productSKU: adjustment.sku, delta: adjustment.delta, reason: reason,
-                    occurredAt: occurredAt, saleID: nil
-                ))
+                try move(adjustment, reason: reason, occurredAt: occurredAt, note: nil)
             }
         }
+    }
+
+    /// Inside `transactor.perform` only.
+    private func move(_ adjustment: StockAdjustment, reason: MovementReason, occurredAt: Date, note: String?) throws {
+        let product = try context.requireProduct(sku: adjustment.sku)
+        product.stockOnHand += adjustment.delta
+        context.insert(StockMovement(
+            productSKU: adjustment.sku, delta: adjustment.delta, reason: reason,
+            occurredAt: occurredAt, saleID: nil, note: note
+        ))
     }
 }

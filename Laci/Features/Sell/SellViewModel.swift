@@ -29,18 +29,11 @@ struct PendingBarcode: Hashable, Identifiable {
     }
 }
 
-/// What the cashier is told when a scan adds nothing (SPEC §6): a misread and a missing product
-/// are different problems, so a bad checksum says "scan again" and never "unknown product".
-enum ScanNotice: Hashable {
-    case scanAgain
-    case lookupFailed
-}
-
 /// The sell screen's state. Every amount comes from `Pricing` or `Tender`; the only arithmetic
 /// here is a quantity count going up or down by one.
 @MainActor
 @Observable
-final class SellViewModel {
+final class SellViewModel: ScanReceiving {
     private(set) var catalogue: [Product] = []
     private(set) var catalogueFailed = false
     var query = ""
