@@ -95,33 +95,25 @@ final class AppSession {
         )
     }
 
-    /// In-memory dependencies and a backup service pointed at a throwaway folder, for previews and
-    /// UI tests. `offline` leaves the backup container missing and the store price unloadable.
-    static func inMemory(offline: Bool = false) throws -> AppSession {
-        let scratch = FileManager.default.temporaryDirectory.appending(path: "laci-preview-\(UUID().uuidString)")
-        let fallback = scratch.appending(path: "Backups")
-        let location: @Sendable () -> BackupLocation? = if offline {
-            { nil }
-        } else {
-            { .localFallback(fallback) }
-        }
-        return try AppSession(
-            dependencies: .inMemory(),
-            backups: BackupService(
-                storeURL: scratch.appending(path: "Laci.store"),
-                location: location,
-                stagingRoot: scratch.appending(path: "Staging")
-            ),
-            unlock: UnlockStore(simulatesOffline: offline)
-        )
+    /// In-memory dependencies and a backup service pointed at a throwaway folder, for previews.
+    static func inMemory() throws -> AppSession {
+        let scratch = scratchFolder()
+        return try AppSession(dependencies: .inMemory(), backups: scratchBackups(in: scratch, offline: false))
     }
 
     #if DEBUG
-        /// A UI test cannot recover from a store that failed to build any more than a shop can, so
-        /// this stops with the reason, the same policy as `Dependencies.live()`.
+        /// The UI-test session: a fresh store on disk in a throwaway folder, never in memory, because
+        /// "Cadangkan sekarang" copies the store file and a restore moves it, and both are UI-tested.
+        /// A store that fails to build stops the app with the reason, the same policy as
+        /// `Dependencies.live()`.
         static func uiTesting(_ launch: LaunchEnvironment) -> AppSession {
             do {
-                let session = try inMemory(offline: launch.isOffline)
+                let scratch = scratchFolder()
+                let session = try AppSession(
+                    dependencies: .onDisk(at: scratch.appending(path: "Laci.store")),
+                    backups: scratchBackups(in: scratch, offline: launch.isOffline),
+                    unlock: UnlockStore(simulatesOffline: launch.isOffline)
+                )
                 if launch.loadsFixture {
                     _ = try DebugFixtures.loadWarung200(into: session.dependencies)
                 }
@@ -131,4 +123,23 @@ final class AppSession {
             }
         }
     #endif
+
+    private static func scratchFolder() -> URL {
+        FileManager.default.temporaryDirectory.appending(path: "laci-scratch-\(UUID().uuidString)")
+    }
+
+    /// `offline` leaves the container missing, which is how the backup reports iCloud unavailable.
+    private static func scratchBackups(in scratch: URL, offline: Bool) -> BackupService {
+        let fallback = scratch.appending(path: "Backups")
+        let location: @Sendable () -> BackupLocation? = if offline {
+            { nil }
+        } else {
+            { .localFallback(fallback) }
+        }
+        return BackupService(
+            storeURL: scratch.appending(path: "Laci.store"),
+            location: location,
+            stagingRoot: scratch.appending(path: "Staging")
+        )
+    }
 }
