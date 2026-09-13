@@ -76,7 +76,7 @@ struct SellView: View {
         switch layout {
         case .threePane:
             HStack(spacing: 0) {
-                SellCataloguePane(viewModel: viewModel, focus: $focus, onAdd: focusWedge)
+                SellCataloguePane(viewModel: viewModel, sheet: $sheet, focus: $focus, onAdd: focusWedge)
                     .frame(minWidth: 240, idealWidth: 320, maxWidth: 400)
                 Divider()
                 cartPane(showsSearch: false)
@@ -164,6 +164,16 @@ struct SellView: View {
             }
             .accessibilityIdentifier("SellView.stocktake")
         }
+        if layout != .compact {
+            ToolbarItem {
+                Button {
+                    path.append(.catalogue)
+                } label: {
+                    Label("Katalog", systemImage: "shippingbox")
+                }
+                .accessibilityIdentifier("SellView.catalogue")
+            }
+        }
         ToolbarItem {
             Button {
                 path.append(.settings)
@@ -181,6 +191,7 @@ struct SellView: View {
         case .history: SalesHistoryView(dependencies: dependencies)
         case .stocktake: StocktakeView(dependencies: dependencies)
         case .settings: SettingsView(dependencies: dependencies)
+        case .catalogue: CatalogueView(dependencies: dependencies)
         }
     }
 
@@ -198,6 +209,8 @@ struct SellView: View {
                 self.sheet = nil
             }
         case .paywall: PaywallView(unlock: unlock, origin: .checkout)
+        case .importCatalogue:
+            CatalogueImportView(dependencies: dependencies) { viewModel.loadCatalogue() }
         }
     }
 }

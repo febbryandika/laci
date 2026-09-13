@@ -8,7 +8,7 @@ struct NewProductView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: NewProductViewModel
 
-    init(pending: PendingBarcode, dependencies: Dependencies, onCreated: @escaping (Product) -> Void) {
+    init(pending: PendingBarcode?, dependencies: Dependencies, onCreated: @escaping (Product) -> Void) {
         self.onCreated = onCreated
         _viewModel = State(initialValue: NewProductViewModel(barcode: pending, dependencies: dependencies))
     }
@@ -16,9 +16,12 @@ struct NewProductView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    LabeledContent("Barcode") {
-                        Text(viewModel.barcode.value).monospacedDigit()
+                if let barcode = viewModel.barcode {
+                    Section {
+                        LabeledContent("Barcode") {
+                            Text(barcode.value).monospacedDigit()
+                        }
+                        .accessibilityIdentifier("NewProductView.barcode")
                     }
                 }
                 Section("Produk") {

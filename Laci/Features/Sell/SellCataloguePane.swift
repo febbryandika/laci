@@ -5,6 +5,7 @@ import SwiftUI
 /// one tap to add. The list of results in the cart pane is the same data on the other layouts.
 struct SellCataloguePane: View {
     let viewModel: SellViewModel
+    @Binding var sheet: SellSheet?
     let focus: FocusState<SellField?>.Binding
     let onAdd: () -> Void
 
@@ -33,7 +34,7 @@ struct SellCataloguePane: View {
         if viewModel.catalogueFailed {
             ContentUnavailableView("Katalog tidak bisa dibuka", systemImage: "exclamationmark.triangle")
         } else if viewModel.catalogue.isEmpty {
-            ContentUnavailableView("Katalog kosong", systemImage: "shippingbox")
+            CatalogueEmptyView(onImport: { sheet = .importCatalogue }, onAdd: { sheet = .newProduct(nil) })
         } else if viewModel.results.isEmpty {
             ContentUnavailableView.search(text: viewModel.query)
         } else {

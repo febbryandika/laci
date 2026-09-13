@@ -6,8 +6,10 @@ enum SellSheet: Identifiable, Hashable {
     case saleDiscount
     case tender
     case scanner
-    case newProduct(PendingBarcode)
+    /// nil: no barcode, the catalogue's "add first product".
+    case newProduct(PendingBarcode?)
     case paywall
+    case importCatalogue
 
     var id: String {
         switch self {
@@ -15,8 +17,9 @@ enum SellSheet: Identifiable, Hashable {
         case .saleDiscount: "discount"
         case .tender: "tender"
         case .scanner: "scanner"
-        case let .newProduct(pending): "new-\(pending.value)"
+        case let .newProduct(pending): "new-\(pending?.value ?? "manual")"
         case .paywall: "paywall"
+        case .importCatalogue: "import"
         }
     }
 }
@@ -28,6 +31,7 @@ enum SellRoute: Hashable {
     case history
     case stocktake
     case settings
+    case catalogue
 }
 
 /// What can hold keyboard focus on the sell screen (SPEC §9).

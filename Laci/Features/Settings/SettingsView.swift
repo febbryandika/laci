@@ -23,6 +23,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            catalogueSection
             printerSection
             scannerSection
             exportSection
@@ -36,6 +37,17 @@ struct SettingsView: View {
         // Display only; a count that cannot be read shows as zero, the same policy as the gate.
         .onAppear { committedSales = (try? dependencies.sales.committedSaleCount()) ?? 0 }
         .sheet(isPresented: $paywallShown) { PaywallView(unlock: session.unlock, origin: .settings) }
+    }
+
+    /// The catalogue's home on an iPhone (SPEC §9: push navigation); an iPad also reaches it from
+    /// the sell toolbar.
+    private var catalogueSection: some View {
+        Section("Katalog") {
+            NavigationLink("Katalog") {
+                CatalogueView(dependencies: dependencies)
+            }
+            .accessibilityIdentifier("SettingsView.catalogue")
+        }
     }
 
     private var printerSection: some View {

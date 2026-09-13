@@ -4,11 +4,11 @@ import Observation
 
 /// "Create SKU with this barcode" (SPEC §3.1.2): the smallest form that yields a sellable product.
 /// Product and barcode are written in one transaction, so a taken SKU or barcode leaves nothing
-/// behind. The full catalogue screen is a later phase.
+/// behind. With no barcode it is the catalogue's "add first product": the SKU is typed.
 @MainActor
 @Observable
 final class NewProductViewModel {
-    let barcode: PendingBarcode
+    let barcode: PendingBarcode?
     var sku: String
     var name = ""
     var unit = "pcs"
@@ -22,10 +22,10 @@ final class NewProductViewModel {
     private let transactor: Transactor
     private let now: () -> Date
 
-    init(barcode: PendingBarcode, dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
+    init(barcode: PendingBarcode?, dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
         self.barcode = barcode
         // The barcode is the SKU most shops use; it is editable.
-        sku = barcode.value
+        sku = barcode?.value ?? ""
         products = dependencies.products
         transactor = dependencies.transactor
         self.now = now
@@ -47,7 +47,9 @@ final class NewProductViewModel {
         do {
             try transactor.perform {
                 try products.create(product)
-                try products.addBarcode(barcode.value, symbology: barcode.symbology, to: sku)
+                if let barcode {
+                    try products.addBarcode(barcode.value, symbology: barcode.symbology, to: sku)
+                }
             }
         } catch CoreError.skuTaken {
             return fail("SKU sudah dipakai")

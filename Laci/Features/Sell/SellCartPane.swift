@@ -22,7 +22,12 @@ struct SellCartPane: View {
             if let failed = printer.failedSale {
                 printFailureSection(failed)
             }
-            if showsSearch {
+            if showsSearch, viewModel.catalogue.isEmpty, !viewModel.catalogueFailed {
+                // SPEC §9: an empty catalogue offers import and add-first-product and nothing else.
+                Section {
+                    CatalogueEmptyView(onImport: { sheet = .importCatalogue }, onAdd: { sheet = .newProduct(nil) })
+                }
+            } else if showsSearch {
                 searchSection
                 if !viewModel.query.isEmpty {
                     resultsSection
@@ -94,8 +99,6 @@ struct SellCartPane: View {
         Section("Hasil") {
             if viewModel.catalogueFailed {
                 Text("Katalog tidak bisa dibuka")
-            } else if viewModel.catalogue.isEmpty {
-                Text("Katalog kosong")
             } else if viewModel.results.isEmpty {
                 Text("Tidak ditemukan")
             } else {
