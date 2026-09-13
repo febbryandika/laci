@@ -11,6 +11,7 @@ struct SettingsView: View {
     }
 
     @State private var wedgeEnabled = ScannerSettings.wedgeEnabled()
+    @State private var semicolonDelimiter = ExportSettings.semicolonDelimiter()
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -20,6 +21,7 @@ struct SettingsView: View {
         Form {
             printerSection
             scannerSection
+            exportSection
             diagnosticsSection
         }
         .navigationTitle("Pengaturan")
@@ -61,6 +63,19 @@ struct SettingsView: View {
             Toggle("Scanner Bluetooth (mode keyboard)", isOn: $wedgeEnabled)
                 .onChange(of: wedgeEnabled) { ScannerSettings.save(wedgeEnabled: wedgeEnabled) }
                 .accessibilityIdentifier("SettingsView.wedgeToggle")
+        }
+    }
+
+    /// SPEC §5.2: the semicolon toggle exists because Indonesian-locale Excel splits on `;`.
+    private var exportSection: some View {
+        Section("Ekspor") {
+            Toggle("Pemisah titik koma (;) untuk Excel Indonesia", isOn: $semicolonDelimiter)
+                .onChange(of: semicolonDelimiter) { ExportSettings.save(semicolonDelimiter: semicolonDelimiter) }
+                .accessibilityIdentifier("SettingsView.semicolonToggle")
+            NavigationLink("Ekspor CSV") {
+                ExportView(dependencies: dependencies)
+            }
+            .accessibilityIdentifier("SettingsView.export")
         }
     }
 

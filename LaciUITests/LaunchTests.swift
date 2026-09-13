@@ -129,6 +129,21 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.buttons["StocktakeView.apply"].isEnabled)
     }
 
+    /// The export screen is behind Settings (SPEC §5.2) and offers the four files.
+    @MainActor
+    func testExportScreenIsReachable() {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["SellView.settings"].tap()
+        let export = app.buttons["SettingsView.export"]
+        XCTAssertTrue(export.waitForExistence(timeout: 5))
+        export.tap()
+        XCTAssertTrue(app.navigationBars["Ekspor CSV"].waitForExistence(timeout: 5))
+        for kind in ["sales", "sale_lines", "stock_movements", "close_outs"] {
+            XCTAssertTrue(app.buttons["ExportView.\(kind)"].exists, kind)
+        }
+    }
+
     /// The keyboard-wedge path works with the camera sheet closed: with the toggle on, a payload
     /// plus Return typed at the sell screen reaches the same lookup (SPEC §6).
     @MainActor
