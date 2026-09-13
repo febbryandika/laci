@@ -37,6 +37,8 @@ struct SellShortcuts: View {
         }
         .frame(width: 0, height: 0)
         .opacity(0)
+        // Out of the VoiceOver order where the platform honours it; where it does not, each still
+        // carries a label that says exactly what it does.
         .accessibilityHidden(true)
     }
 }

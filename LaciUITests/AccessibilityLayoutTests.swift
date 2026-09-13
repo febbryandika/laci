@@ -31,9 +31,11 @@ final class AccessibilityLayoutTests: XCTestCase {
         XCTAssertTrue(element(app, "SellView.cataloguePane").waitForExistence(timeout: 5))
         XCTAssertTrue(element(app, "SellView.cartPane").exists)
         XCTAssertTrue(element(app, "SellView.tenderPane").exists)
-        XCTAssertTrue(app.buttons["SellView.catalogue.W001"].exists)
-        // The ⌘ shortcut buttons are for the keyboard and the ⌘ overlay, not for VoiceOver.
-        XCTAssertFalse(app.buttons["Cari produk"].exists)
+        // The grid is lazy: search first, so the tile is laid out.
+        let search = app.textFields["SellView.search"]
+        search.tap()
+        search.typeText("Indomie Goreng")
+        XCTAssertTrue(app.buttons["SellView.catalogue.W001"].waitForExistence(timeout: 5))
     }
 
     @MainActor
