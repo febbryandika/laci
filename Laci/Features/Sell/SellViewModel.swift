@@ -42,6 +42,9 @@ final class SellViewModel: ScanReceiving {
     /// One line per SKU; adding a SKU already present increments it (SPEC §3.1.3).
     private(set) var lines: [SaleDraft.Line] = []
     private(set) var saleDiscount: Discount = .none
+    /// The line the keyboard acts on (SPEC §9: ↑/↓, +/−, ⌘⌫). UI state only; see the Selection
+    /// extension for every way it moves.
+    var selectedSKU: String?
     private(set) var tenderError: TenderError?
     private(set) var lastSale: Sale?
     /// An earlier trading day that was never closed (SPEC §3.3.5); the sell screen banners it.
@@ -134,6 +137,7 @@ final class SellViewModel: ScanReceiving {
 
     /// The single entry point for a product reaching the cart; the scanner will call it too.
     func add(_ product: Product) {
+        selectedSKU = product.sku
         if line(sku: product.sku) != nil {
             increment(sku: product.sku)
             return
@@ -182,7 +186,12 @@ final class SellViewModel: ScanReceiving {
     }
 
     func remove(sku: String) {
+        let index = lines.firstIndex { $0.cart.sku == sku }
         lines.removeAll { $0.cart.sku == sku }
+        if selectedSKU == sku, let index {
+            // The selection lands on the line that took the removed one's place, else the last.
+            selectedSKU = (lines.indices.contains(index) ? lines[index] : lines.last)?.cart.sku
+        }
         scanDebouncer.reset()
     }
 
@@ -319,6 +328,7 @@ final class SellViewModel: ScanReceiving {
         }
         lastSale = sale
         lines = []
+        selectedSKU = nil
         saleDiscount = .none
         query = ""
         tenderError = nil
