@@ -213,6 +213,41 @@ struct SaleCorrectionTests {
         #expect(try sales.refunds(of: sale.id).map(\.id) == [second.id])
     }
 
+    // MARK: Trial count (SPEC §3.4)
+
+    @Test("A fresh store has no committed sales")
+    func freshStoreCountsNothing() throws {
+        #expect(try sales.committedSaleCount() == 0)
+    }
+
+    @Test("Every live sale counts and a void frees its slot")
+    func voidFreesASlot() throws {
+        let first = try sell()
+        _ = try sell()
+        #expect(try sales.committedSaleCount() == 2)
+
+        try void(first)
+        #expect(try sales.committedSaleCount() == 1)
+    }
+
+    @Test("A refund mirror is not a sale; the original still counts")
+    func refundMirrorDoesNotCount() throws {
+        let sale = try sell()
+        _ = try refund(sale)
+        #expect(try sales.committedSaleCount() == 1)
+    }
+
+    @Test("A voided refund leaves the original counted once, and voiding the original then frees it")
+    func voidedRefundThenVoidedOriginal() throws {
+        let sale = try sell()
+        let refund = try refund(sale)
+        try void(refund, reason: "retur dibatalkan")
+        #expect(try sales.committedSaleCount() == 1)
+
+        try void(sale)
+        #expect(try sales.committedSaleCount() == 0)
+    }
+
     // MARK: History queries
 
     @Test("Recent sales page newest first by number")
