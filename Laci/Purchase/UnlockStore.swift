@@ -24,6 +24,13 @@ final class UnlockStore: UnlockGating {
     // property may be read from the nonisolated deinit below.
     @ObservationIgnored private var updates: Task<Void, Never>?
     private let log = Logger(subsystem: "id.laci", category: "purchase")
+    /// DEBUG-only (`LaunchEnvironment`): the airplane-mode UI run wants the price load to fail the
+    /// way it does with no connection. The entitlement itself is local and needs no network.
+    private let simulatesOffline: Bool
+
+    init(simulatesOffline: Bool = false) {
+        self.simulatesOffline = simulatesOffline
+    }
 
     func start() {
         guard updates == nil else { return }
@@ -58,6 +65,13 @@ final class UnlockStore: UnlockGating {
     }
 
     func loadProduct() async {
+        #if DEBUG
+            if simulatesOffline {
+                product = nil
+                productLoadFailed = true
+                return
+            }
+        #endif
         do {
             product = try await StoreKit.Product.products(for: [Self.productID]).first
             productLoadFailed = product == nil

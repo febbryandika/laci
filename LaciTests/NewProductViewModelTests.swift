@@ -92,4 +92,18 @@ struct NewProductViewModelTests {
         let all = try dependencies.products.all(includeArchived: true)
         #expect(all.isEmpty)
     }
+
+    @Test("Without a barcode the SKU is typed and only the product is written")
+    func withoutBarcode() throws {
+        let viewModel = NewProductViewModel(barcode: nil, dependencies: dependencies, now: { fixedNow })
+        #expect(viewModel.sku.isEmpty)
+        viewModel.sku = "A1"
+        viewModel.name = "Aqua"
+        viewModel.priceText = "3500"
+        let product = try #require(viewModel.save())
+        #expect(product.sku == "A1")
+        #expect(product.barcodes.isEmpty)
+        let stored = try dependencies.products.product(sku: "A1")
+        #expect(stored != nil)
+    }
 }

@@ -59,7 +59,7 @@ private struct SaleRow: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(sale.total, format: MoneyFormat.rupiah).monospacedDigit()
+                MoneyText(sale.total).monospacedDigit()
                 HStack(spacing: 6) {
                     if sale.receiptFailedAt != nil {
                         Image(systemName: "printer.slash")

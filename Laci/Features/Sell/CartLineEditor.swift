@@ -36,6 +36,7 @@ struct CartLineEditor: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Selesai") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
@@ -46,7 +47,7 @@ struct CartLineEditor: View {
             Section {
                 Text(line.cart.name)
                 LabeledContent("Harga daftar") {
-                    Text(line.listPrice.amount, format: MoneyFormat.rupiah)
+                    MoneyText(line.listPrice)
                 }
             }
             Section("Jumlah") {
@@ -82,7 +83,7 @@ struct CartLineEditor: View {
                 DiscountFields(draft: $discount)
                     .onChange(of: discount) { viewModel.setDiscount(sku: sku, discount.discount) }
                 LabeledContent("Total baris") {
-                    Text(viewModel.lineTotal(for: line).net.amount, format: MoneyFormat.rupiah)
+                    MoneyText(viewModel.lineTotal(for: line).net.amount)
                 }
             }
             Section {
@@ -115,10 +116,10 @@ struct SaleDiscountEditor: View {
                 }
                 Section {
                     LabeledContent("Diskon") {
-                        Text(viewModel.totals.saleDiscount.amount, format: MoneyFormat.rupiah)
+                        MoneyText(viewModel.totals.saleDiscount)
                     }
                     LabeledContent("Total") {
-                        Text(viewModel.totals.grandTotal.amount, format: MoneyFormat.rupiah)
+                        MoneyText(viewModel.totals.grandTotal)
                     }
                 }
             }
@@ -127,6 +128,7 @@ struct SaleDiscountEditor: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Selesai") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }

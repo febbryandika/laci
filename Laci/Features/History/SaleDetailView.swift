@@ -164,7 +164,7 @@ struct SaleDetailView: View {
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Decimal) -> some View {
         LabeledContent(label) {
-            Text(amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(amount).monospacedDigit()
         }
     }
 
@@ -189,21 +189,21 @@ private struct SaleLineRow: View {
                 HStack(spacing: 4) {
                     Text(line.quantity, format: MoneyFormat.plain)
                     Text("×")
-                    Text(line.unitPrice, format: MoneyFormat.rupiah)
+                    MoneyText(line.unitPrice)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 if line.discountAmount != 0 {
                     HStack(spacing: 4) {
                         Text("Diskon")
-                        Text(line.discountAmount, format: MoneyFormat.rupiah)
+                        MoneyText(line.discountAmount)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 }
             }
             Spacer()
-            Text(line.lineTotal, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(line.lineTotal).monospacedDigit()
         }
     }
 }

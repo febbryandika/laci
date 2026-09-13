@@ -53,10 +53,20 @@ jobs:
       - run: swiftlint lint --strict
 
   app:
-    name: xcodebuild test (iOS Simulator)
+    # Both device families: the iPhone layout, and the iPad where the three panes and the AX3
+    # collapse are asserted (SPEC §9).
+    name: xcodebuild test (${{ matrix.device }})
     runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - device: iPhone 17
+            slug: iphone17
+          - device: iPad Pro 11-inch (M5)
+            slug: ipadpro11
     env:
-      DESTINATION: platform=iOS Simulator,name=iPhone 17,OS=26.5
+      DESTINATION: platform=iOS Simulator,name=${{ matrix.device }},OS=26.5
     steps:
       - uses: actions/checkout@v4
       - run: xcodebuild -version
@@ -66,8 +76,9 @@ jobs:
       - name: Boot the simulator
         run: |
           UDID=$(xcrun simctl list devices available -j \
-            | jq -r '.devices | to_entries[] | select(.key | endswith("iOS-26-5")) | .value[]
-                     | select(.name == "iPhone 17") | .udid' | head -1)
+            | jq -r --arg name "${{ matrix.device }}" \
+                '.devices | to_entries[] | select(.key | endswith("iOS-26-5")) | .value[]
+                 | select(.name == $name) | .udid' | head -1)
           test -n "$UDID"
           xcrun simctl boot "$UDID" || true
           xcrun simctl bootstatus "$UDID" -b
@@ -89,5 +100,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: TestResults.xcresult
+          name: TestResults-${{ matrix.slug }}.xcresult
           path: build/TestResults.xcresult

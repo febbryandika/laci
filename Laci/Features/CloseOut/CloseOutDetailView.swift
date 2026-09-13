@@ -78,7 +78,7 @@ struct CloseOutDetailView: View {
 
     private func amountRow(_ label: LocalizedStringKey, _ amount: Decimal) -> some View {
         LabeledContent(label) {
-            Text(amount, format: MoneyFormat.rupiah).monospacedDigit()
+            MoneyText(amount).monospacedDigit()
         }
     }
 }

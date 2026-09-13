@@ -132,7 +132,7 @@ struct StocktakeView: View {
     private var totalSection: some View {
         Section {
             LabeledContent("Total selisih (modal)") {
-                Text(viewModel.totalVarianceValue.amount, format: MoneyFormat.rupiah)
+                MoneyText(viewModel.totalVarianceValue)
                     .monospacedDigit()
                     .foregroundStyle(viewModel.totalVarianceValue < .zero ? .red : .primary)
                     .accessibilityIdentifier("StocktakeView.total")
@@ -170,43 +170,6 @@ struct StocktakeView: View {
             if wedgeEnabled, isVisible, !showScanner, focus == nil {
                 focus = .wedge
             }
-        }
-    }
-}
-
-private struct StocktakeRowView: View {
-    let row: StocktakeRow
-    @Binding var counted: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(row.name)
-                Text("\(row.sku) · sistem \(row.systemQuantity, format: MoneyFormat.plain) \(row.unit)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            TextField("Hitung", text: $counted)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 72)
-                .textFieldStyle(.roundedBorder)
-                .foregroundStyle(row.counted == nil ? .red : .primary)
-                .accessibilityIdentifier("StocktakeView.counted.\(row.sku)")
-            VStack(alignment: .trailing, spacing: 2) {
-                if let variance = row.variance, let value = row.varianceValue {
-                    Text(variance, format: MoneyFormat.plain.sign(strategy: .always(includingZero: false)))
-                        .monospacedDigit()
-                    Text(value.amount, format: MoneyFormat.rupiah)
-                        .font(.caption)
-                        .monospacedDigit()
-                        .foregroundStyle(value < .zero ? .red : .secondary)
-                } else {
-                    Text("—")
-                }
-            }
-            .frame(minWidth: 96, alignment: .trailing)
         }
     }
 }
