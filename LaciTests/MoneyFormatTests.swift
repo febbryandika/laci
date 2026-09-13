@@ -12,12 +12,10 @@ struct MoneyFormatTests {
         #expect(text.contains("15.000"))
     }
 
-    @Test("Spoken: the currency by name, never the Rp abbreviation")
+    @Test("Spoken: the Indonesian-grouped number and the currency's name, the same on every device")
     func spoken() {
-        let text = Decimal(15000).formatted(MoneyFormat.spoken)
-        #expect(text.contains("15.000"))
-        #expect(text.localizedCaseInsensitiveContains("rupiah"))
-        #expect(!text.contains("Rp "))
+        #expect(Decimal(15000).formatted(MoneyFormat.spoken) == "15.000 rupiah")
+        #expect(Decimal(string: "2500.5")?.formatted(MoneyFormat.spoken) == "2.500,5 rupiah")
     }
 
     @Test("Fractions print only when present", arguments: [("2500", "2.500"), ("2500.5", "2.500,5")])
