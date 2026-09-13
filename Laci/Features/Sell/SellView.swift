@@ -33,7 +33,6 @@ struct SellView: View {
     @State private var viewModel: SellViewModel
     @State private var sheet: Sheet?
     @FocusState private var focus: Field?
-    @State private var wedgeText = ""
     @State private var wedgeEnabled = false
     @State private var isVisible = false
 
@@ -267,22 +266,10 @@ struct SellView: View {
 }
 
 private extension SellView {
-    /// SPEC §6: a Bluetooth scanner that pretends to be a keyboard types its payload plus Return
-    /// into whatever is focused. This field is one point wide and exists only to be focused; it
-    /// works with the camera sheet closed and with camera permission denied.
     private var wedgeField: some View {
-        TextField("", text: $wedgeText)
-            .focused($focus, equals: .wedge)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .onSubmit {
-                viewModel.didRead(code: wedgeText, symbology: nil)
-                wedgeText = ""
-                focus = .wedge
-            }
-            .frame(width: 1, height: 1)
-            .opacity(0.02)
-            .accessibilityIdentifier("SellView.wedge")
+        WedgeField(focus: $focus, field: .wedge, identifier: "SellView.wedge") {
+            viewModel.didRead(code: $0, symbology: nil)
+        }
     }
 
     /// Only while this screen is showing with no sheet up, so a pushed or presented screen's own
