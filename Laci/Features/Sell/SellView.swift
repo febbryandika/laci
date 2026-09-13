@@ -34,6 +34,7 @@ struct SellView: View {
     var body: some View {
         NavigationStack(path: $path) {
             layoutBody
+                .background { shortcuts }
                 .navigationTitle("Jual")
                 .navigationBarTitleDisplayMode(layout == .compact ? .automatic : .inline)
                 .navigationDestination(for: SellRoute.self) { destination($0) }
@@ -202,6 +203,43 @@ struct SellView: View {
 }
 
 private extension SellView {
+    var shortcuts: some View {
+        SellShortcuts(
+            viewModel: viewModel, printer: dependencies.printer,
+            focusSearch: { focus = .search },
+            checkoutExactCash: checkoutExactCash,
+            openTender: openTender,
+            escape: escape
+        )
+    }
+
+    /// ⌘⏎: the rounded cash total, tendered exactly. SPEC §5.1 gates it like any checkout button.
+    func checkoutExactCash() {
+        guard !viewModel.lines.isEmpty else { return }
+        guard !viewModel.isCheckoutLocked() else { return sheet = .paywall }
+        viewModel.checkoutCash(tendered: viewModel.cashTotal)
+    }
+
+    /// ⌘⇧⏎: the keypad sheet on an iPhone, the amount field of the pane on an iPad.
+    func openTender() {
+        if layout.showsTenderPane {
+            focus = .tenderAmount
+        } else {
+            sheet = viewModel.isCheckoutLocked() ? .paywall : .tender
+        }
+    }
+
+    /// Esc: clear the search, else drop the selection, else leave the search field. Never the cart.
+    func escape() {
+        if !viewModel.query.isEmpty {
+            viewModel.query = ""
+        } else if viewModel.selectedSKU != nil {
+            viewModel.select(sku: nil)
+        } else if focus == .search {
+            focus = .cart
+        }
+    }
+
     var wedgeField: some View {
         WedgeField(focus: $focus, field: .wedge, identifier: "SellView.wedge") {
             viewModel.didRead(code: $0, symbology: nil)

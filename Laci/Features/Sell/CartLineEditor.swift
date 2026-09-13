@@ -36,6 +36,7 @@ struct CartLineEditor: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Selesai") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
@@ -127,6 +128,7 @@ struct SaleDiscountEditor: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Selesai") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }

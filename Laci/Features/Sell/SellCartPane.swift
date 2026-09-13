@@ -33,6 +33,27 @@ struct SellCartPane: View {
         }
         // SPEC §9: Reduce Motion removes the cart-add animation.
         .animation(reduceMotion ? nil : .snappy, value: viewModel.lines.map(\.cart.sku))
+        // The bare keys act only while the list itself has focus, so "-" typed into the search
+        // field is still a character. Not in the ⌘ overlay, by design: they carry no modifier.
+        .focusable()
+        .focused(focus, equals: .cart)
+        .focusEffectDisabled()
+        .onKeyPress(.upArrow) {
+            viewModel.selectPrevious()
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            viewModel.selectNext()
+            return .handled
+        }
+        .onKeyPress(characters: CharacterSet(charactersIn: "+")) { _ in
+            viewModel.incrementSelected()
+            return .handled
+        }
+        .onKeyPress(characters: CharacterSet(charactersIn: "-")) { _ in
+            viewModel.decrementSelected()
+            return .handled
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("SellView.cartPane")
     }
@@ -102,6 +123,7 @@ struct SellCartPane: View {
             ForEach(viewModel.lines, id: \.cart.sku) { line in
                 Button {
                     viewModel.select(sku: line.cart.sku)
+                    focus.wrappedValue = .cart
                     sheet = .editLine(sku: line.cart.sku)
                 } label: {
                     CartRow(line: line, total: viewModel.lineTotal(for: line))

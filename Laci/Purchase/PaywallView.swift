@@ -54,6 +54,7 @@ struct PaywallView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Tutup") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                         .accessibilityIdentifier("PaywallView.close")
                 }
             }

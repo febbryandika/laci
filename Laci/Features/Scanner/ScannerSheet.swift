@@ -27,6 +27,7 @@ struct ScannerSheet: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Tutup") { dismiss() }
+                            .keyboardShortcut(.cancelAction)
                             .accessibilityIdentifier("ScannerSheet.close")
                     }
                     ToolbarItem(placement: .primaryAction) {

@@ -108,16 +108,18 @@ struct TenderContent: View {
         }
         .accessibilityIdentifier("Tender.total")
         Text("Uang diterima").font(.headline)
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-            ForEach(viewModel.cashSuggestions, id: \.amount) { amount in
-                Button {
-                    attemptCash(amount)
-                } label: {
-                    MoneyText(amount)
-                        .frame(maxWidth: .infinity, minHeight: 60)
+        if !viewModel.lines.isEmpty {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
+                ForEach(viewModel.cashSuggestions, id: \.amount) { amount in
+                    Button {
+                        attemptCash(amount)
+                    } label: {
+                        MoneyText(amount)
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("Tender.chip.\(amount.amount.formatted(MoneyFormat.plain))")
                 }
-                .buttonStyle(.bordered)
-                .accessibilityIdentifier("Tender.chip.\(amount.amount.formatted(MoneyFormat.plain))")
             }
         }
         TextField("Jumlah lain", text: $amountText)
