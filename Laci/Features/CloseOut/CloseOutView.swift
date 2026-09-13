@@ -75,6 +75,7 @@ struct CloseOutView: View {
                 TextField("Modal awal", text: $viewModel.openingFloatText)
                     .keyboardType(.numberPad)
                     .disabled(viewModel.result != nil)
+                    .accessibilityIdentifier("CloseOutView.openingFloat")
             }
             if let result = viewModel.result {
                 amountRow("Uang tunai dihitung", result.counted)
@@ -104,12 +105,11 @@ struct CloseOutView: View {
                     viewModel.deletePayout(payout)
                 }
             }
-            Picker("Jenis", selection: $payoutKind) {
+            AdaptivePicker("Jenis", selection: $payoutKind) {
                 ForEach(PayoutKind.allCases, id: \.self) { kind in
                     Text(kind.label).tag(kind)
                 }
             }
-            .pickerStyle(.segmented)
             TextField("Jumlah", text: $payoutAmount)
                 .keyboardType(.numberPad)
             TextField("Keterangan", text: $payoutNote)
@@ -215,17 +215,29 @@ struct CloseOutView: View {
 
 struct PayoutRow: View {
     let payout: Payout
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
+        if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: 2) {
-                Text(payout.note)
-                Text(payout.kind?.label ?? "?")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                title
+                MoneyText(payout.amount).monospacedDigit()
             }
-            Spacer()
-            MoneyText(payout.amount).monospacedDigit()
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                title
+                Spacer()
+                MoneyText(payout.amount).monospacedDigit()
+            }
+        }
+    }
+
+    private var title: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(payout.note)
+            Text(payout.kind?.label ?? "?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 }

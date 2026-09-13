@@ -11,17 +11,19 @@ struct SellCataloguePane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 8) {
-                SellSearchField(viewModel: viewModel, focus: focus, onSubmit: onAdd)
-                    .textFieldStyle(.roundedBorder)
-                if let notice = viewModel.scanNotice {
-                    Label(ScanNoticeText.label(notice), systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
-                        .accessibilityIdentifier("SellView.scanNotice")
+            if !viewModel.catalogue.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    SellSearchField(viewModel: viewModel, focus: focus, onSubmit: onAdd)
+                        .textFieldStyle(.roundedBorder)
+                    if let notice = viewModel.scanNotice {
+                        Label(ScanNoticeText.label(notice), systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.red)
+                            .accessibilityIdentifier("SellView.scanNotice")
+                    }
                 }
+                .padding()
+                Divider()
             }
-            .padding()
-            Divider()
             content
         }
         .background(Color(.systemGroupedBackground))

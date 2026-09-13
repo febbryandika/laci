@@ -39,12 +39,11 @@ struct DiscountFields: View {
     @Binding var draft: DiscountDraft
 
     var body: some View {
-        Picker("Jenis diskon", selection: $draft.kind) {
+        AdaptivePicker("Jenis diskon", selection: $draft.kind) {
             Text("Tanpa").tag(DiscountDraft.Kind.none)
             Text("Nominal").tag(DiscountDraft.Kind.amount)
             Text("Persen").tag(DiscountDraft.Kind.percent)
         }
-        .pickerStyle(.segmented)
         .onChange(of: draft.kind) { draft.valueText = "" }
         if draft.kind != .none {
             TextField(draft.kind == .amount ? "Rp" : "%", text: $draft.valueText)

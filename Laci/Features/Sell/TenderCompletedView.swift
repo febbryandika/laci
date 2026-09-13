@@ -15,8 +15,8 @@ struct TenderCompletedView: View {
                 if let change = sale.changeGiven {
                     LabeledContent("Kembalian") {
                         MoneyText(change).bold()
+                            .accessibilityIdentifier("Tender.change")
                     }
-                    .accessibilityIdentifier("Tender.change")
                 }
                 if let reference = sale.reference {
                     LabeledContent("Referensi") { Text(reference) }

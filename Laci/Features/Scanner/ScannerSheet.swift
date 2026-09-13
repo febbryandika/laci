@@ -92,10 +92,19 @@ struct ScannerSheet: View {
         }
     }
 
+    /// Scrolls, so the manual-entry field is reachable at every Dynamic Type size.
     private func failurePanel(_ title: String, showsSettings: Bool) -> some View {
+        ScrollView {
+            failureContent(title, showsSettings: showsSettings)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial)
+    }
+
+    private func failureContent(_ title: String, showsSettings: Bool) -> some View {
         VStack(spacing: 12) {
             Image(systemName: "camera")
-                .font(.system(size: 44))
+                .font(.largeTitle)
                 .foregroundStyle(.secondary)
             Text(title)
                 .font(.title2.bold())

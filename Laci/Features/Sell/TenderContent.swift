@@ -24,7 +24,6 @@ struct TenderContent: View {
     let focus: FocusState<SellField?>.Binding
     let presentPaywall: () -> Void
     let onNewSale: () -> Void
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var method: TenderMethod = .cash
     @State private var amountText = ""
     @State private var reference = ""
@@ -79,20 +78,13 @@ struct TenderContent: View {
         .onDisappear { viewModel.clearTenderError() }
     }
 
-    /// Three labels do not fit a segment at accessibility sizes.
-    @ViewBuilder
     private var methodPicker: some View {
-        let picker = Picker("Metode", selection: $method) {
+        AdaptivePicker("Metode", selection: $method) {
             Text("Tunai").tag(TenderMethod.cash)
             Text("QRIS").tag(TenderMethod.qris)
             Text("Transfer").tag(TenderMethod.transfer)
         }
         .accessibilityIdentifier("Tender.method")
-        if dynamicTypeSize.isAccessibilitySize {
-            picker.pickerStyle(.menu)
-        } else {
-            picker.pickerStyle(.segmented)
-        }
     }
 
     // MARK: Cash
@@ -105,8 +97,8 @@ struct TenderContent: View {
     private var cashSection: some View {
         LabeledContent("Total tunai") {
             MoneyText(viewModel.cashTotal).bold()
+                .accessibilityIdentifier("Tender.total")
         }
-        .accessibilityIdentifier("Tender.total")
         Text("Uang diterima").font(.headline)
         if !viewModel.lines.isEmpty {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
@@ -132,8 +124,8 @@ struct TenderContent: View {
             if let settlement = viewModel.settle(tendered: tendered) {
                 LabeledContent("Kembalian") {
                     MoneyText(settlement.change).bold()
+                        .accessibilityIdentifier("Tender.change")
                 }
-                .accessibilityIdentifier("Tender.change")
             } else {
                 Text("Uang kurang").foregroundStyle(.red)
             }
@@ -146,8 +138,8 @@ struct TenderContent: View {
     private var nonCashSection: some View {
         LabeledContent("Total") {
             MoneyText(viewModel.totals.grandTotal).bold()
+                .accessibilityIdentifier("Tender.total")
         }
-        .accessibilityIdentifier("Tender.total")
         TextField("Nomor referensi", text: $reference)
             .textInputAutocapitalization(.characters)
             .autocorrectionDisabled()
