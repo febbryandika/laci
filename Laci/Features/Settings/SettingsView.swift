@@ -10,6 +10,7 @@ struct SettingsView: View {
         dependencies.printer
     }
 
+    @Environment(AppSession.self) private var session
     @State private var wedgeEnabled = ScannerSettings.wedgeEnabled()
     @State private var semicolonDelimiter = ExportSettings.semicolonDelimiter()
 
@@ -22,10 +23,12 @@ struct SettingsView: View {
             printerSection
             scannerSection
             exportSection
+            backupSection
             diagnosticsSection
         }
         .navigationTitle("Pengaturan")
         .navigationBarTitleDisplayMode(.inline)
+        .task { await session.backups.refreshArchives() }
     }
 
     private var printerSection: some View {
@@ -79,6 +82,51 @@ struct SettingsView: View {
         }
     }
 
+    /// SPEC §5.3: a file copy into iCloud Documents, opt-in, and never a sync engine.
+    private var backupSection: some View {
+        @Bindable var backups = session.backups
+        return Section {
+            Toggle("Cadangkan otomatis saat mengisi daya", isOn: $backups.automaticEnabled)
+                .accessibilityIdentifier("SettingsView.automaticBackup")
+            Button("Cadangkan sekarang") {
+                Task { await backups.backupNow() }
+            }
+            .disabled(backups.status == .running)
+            .accessibilityIdentifier("SettingsView.backupNow")
+            LabeledContent("Cadangan terakhir") {
+                Text(backups.lastBackupAt.map { $0.formatted(DateFormat.dateTime) } ?? "—")
+                    .accessibilityIdentifier("SettingsView.lastBackup")
+            }
+            if let status = backupStatusText {
+                Text(status)
+                    .font(.footnote)
+                    .foregroundStyle(backupFailed ? .red : .secondary)
+                    .accessibilityIdentifier("SettingsView.backupStatus")
+            }
+        } header: {
+            Text(backups.location?.isLocalFallback == true ? "Cadangan lokal (simulator)" : "Cadangan iCloud")
+        } footer: {
+            Text("Jika iPad hilang, yang tersimpan adalah data sampai cadangan terakhir.")
+        }
+    }
+
+    private var backupFailed: Bool {
+        if case .failed = session.backups.status {
+            true
+        } else {
+            false
+        }
+    }
+
+    private var backupStatusText: String? {
+        switch session.backups.status {
+        case .idle: nil
+        case .running: "Menyalin…"
+        case .finished: "Cadangan tersimpan."
+        case let .failed(error): BackupErrorText.label(error)
+        }
+    }
+
     private var diagnosticsSection: some View {
         Section("Diagnostik") {
             LabeledContent("MTU") { Text(printer.negotiatedMTU.map { "\($0) byte" } ?? "—") }
@@ -88,7 +136,15 @@ struct SettingsView: View {
                     $0.formatted(.units(allowed: [.seconds, .milliseconds], width: .narrow))
                 } ?? "—")
             }
+            LabeledContent("Ukuran berkas") { Text(storeSizeLabel) }
+            LabeledContent("Skema") { Text(BackupService.schemaVersion) }
         }
+    }
+
+    private var storeSizeLabel: String {
+        let store = session.backups.storeURL
+        guard let size = try? store.resourceValues(forKeys: [.fileSizeKey]).fileSize else { return "—" }
+        return ByteCountFormatStyle().format(Int64(size))
     }
 
     private var paperWidth: Binding<PaperWidth> {
@@ -114,6 +170,21 @@ struct SettingsView: View {
     }
 }
 
+/// One wording per backup failure, for Settings and the restore screen.
+enum BackupErrorText {
+    static func label(_ error: BackupError) -> String {
+        switch error {
+        case .iCloudUnavailable: "iCloud tidak tersedia. Masuk ke iCloud dan nyalakan iCloud Drive di Pengaturan iPad."
+        case let .copyFailed(reason): "Gagal menyalin berkas: \(reason)"
+        case let .pruneFailed(reason): "Cadangan tersimpan, tetapi cadangan lama gagal dihapus: \(reason)"
+        case let .manifestUnreadable(reason): "Cadangan tidak terbaca: \(reason)"
+        case let .incompatibleSchema(found): "Cadangan dari versi Laci lain (skema \(found)) tidak bisa dipulihkan"
+        case .notDownloaded: "Cadangan belum terunduh dari iCloud. Coba lagi sebentar lagi."
+        case let .restoreFailed(reason): "Gagal memulihkan: \(reason)"
+        }
+    }
+}
+
 /// One wording per failure, shared by Settings and the pairing screen.
 enum PrintErrorText {
     static func label(_ error: PrintError) -> String {
@@ -132,10 +203,11 @@ enum PrintErrorText {
 
 #if DEBUG
     #Preview {
-        if let dependencies = try? Dependencies.inMemory() {
+        if let session = try? AppSession.inMemory() {
             NavigationStack {
-                SettingsView(dependencies: dependencies)
+                SettingsView(dependencies: session.dependencies)
             }
+            .environment(session)
         } else {
             Text("In-memory store failed")
         }

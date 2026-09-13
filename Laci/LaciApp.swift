@@ -48,18 +48,20 @@ struct Dependencies {
 
 @main
 struct LaciApp: App {
-    private let dependencies: Dependencies
+    @State private var session: AppSession
 
     init() {
-        dependencies = Dependencies.live()
+        let session = AppSession.live()
         // SPEC §7.3: the shop switches the printer on at 7am and Laci is already connected at the
         // first sale, not after someone opens Settings.
-        dependencies.printer.start()
+        session.dependencies.printer.start()
+        _session = State(initialValue: session)
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView(dependencies: dependencies)
+            RootView()
+                .environment(session)
         }
     }
 }
