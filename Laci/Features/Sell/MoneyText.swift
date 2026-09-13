@@ -18,7 +18,11 @@ struct MoneyText: View {
     }
 
     var body: some View {
+        // One line always: at AX5 a wrapped "Rp3.50 / 0" reads as two amounts, so the digits shrink
+        // before they ever break.
         Text(verbatim: amount.formatted(MoneyFormat.rupiah))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .accessibilityLabel(Text(verbatim: amount.formatted(MoneyFormat.spoken)))
     }
 }

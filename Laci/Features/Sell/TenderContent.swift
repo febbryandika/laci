@@ -29,6 +29,7 @@ struct TenderContent: View {
     @State private var reference = ""
     /// The last sale this view has already shown, so only a sale rung up after it appears.
     @State private var acknowledgedSaleID: UUID?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(
         viewModel: SellViewModel, printer: PrinterCoordinator, style: Style, focus: FocusState<SellField?>.Binding,
@@ -108,7 +109,9 @@ struct TenderContent: View {
         }
         Text("Uang diterima").font(.headline)
         if !viewModel.lines.isEmpty {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
+            // Wide enough for "Rp 100.000" at the size in force: a chip that truncates its amount
+            // is a chip nobody can read.
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 260 : 120))]) {
                 ForEach(viewModel.cashSuggestions, id: \.amount) { amount in
                     Button {
                         attemptCash(amount)

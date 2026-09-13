@@ -179,31 +179,44 @@ struct SaleDetailView: View {
     }
 }
 
+/// Same shape as the cart row: the total drops under the name at accessibility sizes.
 private struct SaleLineRow: View {
     let line: SaleLine
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(line.name)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                details
+                MoneyText(line.lineTotal).monospacedDigit()
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                details
+                Spacer()
+                MoneyText(line.lineTotal).monospacedDigit()
+            }
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(line.name)
+            HStack(spacing: 4) {
+                Text(verbatim: line.quantity.formatted(MoneyFormat.plain))
+                Text(verbatim: "×")
+                MoneyText(line.unitPrice)
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            if line.discountAmount != 0 {
                 HStack(spacing: 4) {
-                    Text(verbatim: line.quantity.formatted(MoneyFormat.plain))
-                    Text(verbatim: "×")
-                    MoneyText(line.unitPrice)
+                    Text("Diskon")
+                    MoneyText(line.discountAmount)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                if line.discountAmount != 0 {
-                    HStack(spacing: 4) {
-                        Text("Diskon")
-                        MoneyText(line.discountAmount)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
             }
-            Spacer()
-            MoneyText(line.lineTotal).monospacedDigit()
         }
     }
 }

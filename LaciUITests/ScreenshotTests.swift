@@ -24,14 +24,18 @@ final class ScreenshotTests: XCTestCase {
         }
     }
 
+    /// Three launches per language and size: a pushed screen whose bar carries toolbar buttons has
+    /// no reliable back button to tap, so each group ends with the app terminated instead.
     @MainActor
     private func record(language: UITestApp.Language, size: String?) throws {
-        let app = UITestApp.launch(UITestApp.Options(contentSize: size, language: language))
         let sizeName = size == nil ? "default" : "ax5"
+        let options = UITestApp.Options(contentSize: size, language: language)
         func shot(_ screen: String) throws {
             try save("\(language.rawValue)-\(sizeName)-\(screen)")
         }
-        XCTAssertTrue(app.buttons["SellView.scan"].waitForExistence(timeout: 5))
+
+        var app = UITestApp.launch(options)
+        XCTAssertTrue(app.buttons["SellView.scan"].waitForExistence(timeout: 15))
         try shot("sell-empty")
         _ = openScannerSheet(app, language: language)
         try shot("scanner")
@@ -39,30 +43,50 @@ final class ScreenshotTests: XCTestCase {
         scan(app, code: UITestApp.fixtureBarcode, language: language)
         XCTAssertTrue(app.buttons["SellView.line.W001"].waitForExistence(timeout: 5))
         try shot("sell-cart")
+        openTender(app, language: language)
         if !element(app, "SellView.tenderPane").exists {
-            openTender(app, language: language)
             try shot("tender")
-            app.navigationBars.buttons.firstMatch.tap()
         }
-        tap(app.buttons["SellView.closeOut"], "closeOut") { app.textFields["CloseOutView.counted"].exists }
-        try shot("closeout")
-        app.navigationBars.buttons.firstMatch.tap()
+        let newSale = app.buttons["TenderView.newSale"]
+        tap(app.buttons["Tender.chip.5000"], "chip") { newSale.exists }
+        try shot("tender-completed")
+        tap(newSale, "TenderView.newSale") { !newSale.exists }
+        XCTAssertTrue(app.buttons["SellView.reprint"].waitForExistence(timeout: 10))
+        try shot("sell-print-failed")
         tap(app.buttons["SellView.history"], "history") { self.element(app, "SalesHistoryView.list").exists }
         try shot("history")
         app.navigationBars.buttons.firstMatch.tap()
+        tap(app.buttons["SellView.closeOut"], "closeOut") { app.textFields["CloseOutView.counted"].exists }
+        try shot("closeout")
+        app.terminate()
+
+        app = UITestApp.launch(options)
+        XCTAssertTrue(app.buttons["SellView.stocktake"].waitForExistence(timeout: 15))
         tap(app.buttons["SellView.stocktake"], "stocktake") { app.buttons["StocktakeView.scan"].exists }
         try shot("stocktake")
-        app.navigationBars.buttons.firstMatch.tap()
-        tap(app.buttons["SellView.settings"], "settings") { app.buttons["SettingsView.backupNow"].exists }
+        app.terminate()
+
+        try recordSettings(options, shot: shot)
+    }
+
+    @MainActor
+    private func recordSettings(_ options: UITestApp.Options, shot: (String) throws -> Void) throws {
+        let app = UITestApp.launch(options)
+        XCTAssertTrue(app.buttons["SellView.settings"].waitForExistence(timeout: 15))
+        // The first row: a Form lays out only what is on screen, and the backup rows are below it.
+        tap(app.buttons["SellView.settings"], "settings") { app.buttons["SettingsView.catalogue"].exists }
         try shot("settings")
-        tap(app.buttons["SettingsView.catalogue"], "catalogue") { self.element(app, "CatalogueView.list").exists }
-        try shot("catalogue")
-        app.navigationBars.buttons.firstMatch.tap()
         let unlock = app.buttons["SettingsView.unlock"]
         scrollTo(app, unlock)
         tap(unlock, "unlock") { app.buttons["PaywallView.close"].exists }
         try shot("paywall")
-        app.buttons["PaywallView.close"].tap()
+        tap(app.buttons["PaywallView.close"], "close paywall") { !app.buttons["PaywallView.close"].exists }
+        let catalogue = app.buttons["SettingsView.catalogue"]
+        for _ in 0 ..< 6 where !(catalogue.exists && catalogue.isHittable) {
+            app.swipeDown(velocity: .slow)
+        }
+        tap(catalogue, "catalogue") { self.element(app, "CatalogueView.list").exists }
+        try shot("catalogue")
         app.terminate()
     }
 
@@ -70,6 +94,8 @@ final class ScreenshotTests: XCTestCase {
     @MainActor
     private func save(_ name: String) throws {
         let idiom = UITestApp.isPad ? "ipad" : "iphone"
+        // Existence fires while a push or a sheet is still sliding in.
+        Thread.sleep(forTimeInterval: 0.8)
         let screenshot = XCUIScreen.main.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "\(idiom)-\(name)"

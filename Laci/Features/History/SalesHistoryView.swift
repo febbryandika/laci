@@ -46,35 +46,53 @@ struct SalesHistoryView: View {
     }
 }
 
+/// Two columns, or at accessibility sizes one under the other so the date is not broken a word
+/// per line beside the amount.
 private struct SaleRow: View {
     let sale: Sale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: "#\(sale.number)")
-                Text(verbatim: sale.occurredAt.formatted(DateFormat.dateTime))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                heading
+                outcome(alignment: .leading)
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                MoneyText(sale.total).monospacedDigit()
-                HStack(spacing: 6) {
-                    if sale.receiptFailedAt != nil {
-                        Image(systemName: "printer.slash")
-                            .accessibilityLabel("Struk gagal dicetak")
-                    }
-                    if sale.voidedAt != nil {
-                        Text("Dibatalkan").foregroundStyle(.red)
-                    } else if sale.isRefund {
-                        Text("Retur").foregroundStyle(.orange)
-                    }
-                    Text(sale.paymentLabel)
-                }
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                heading
+                Spacer()
+                outcome(alignment: .trailing)
+            }
+        }
+    }
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: "#\(sale.number)")
+            Text(verbatim: sale.occurredAt.formatted(DateFormat.dateTime))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func outcome(alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 2) {
+            MoneyText(sale.total).monospacedDigit()
+            HStack(spacing: 6) {
+                if sale.receiptFailedAt != nil {
+                    Image(systemName: "printer.slash")
+                        .accessibilityLabel("Struk gagal dicetak")
+                }
+                if sale.voidedAt != nil {
+                    Text("Dibatalkan").foregroundStyle(.red)
+                } else if sale.isRefund {
+                    Text("Retur").foregroundStyle(.orange)
+                }
+                Text(sale.paymentLabel)
             }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
     }
 }

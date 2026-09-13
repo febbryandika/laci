@@ -67,7 +67,9 @@ struct SellCartPane: View {
     private func openDaySection(_ day: Date) -> some View {
         Section {
             NavigationLink(value: SellRoute.closeOut) {
-                Label("Hari \(day.formatted(DateFormat.day)) belum ditutup", systemImage: "exclamationmark.triangle")
+                BannerRow(systemImage: "exclamationmark.triangle") {
+                    Text("Hari \(day.formatted(DateFormat.day)) belum ditutup")
+                }
             }
             .accessibilityIdentifier("SellView.openDay")
         }
@@ -76,7 +78,9 @@ struct SellCartPane: View {
     /// SPEC §7.3: a failed print is a row, not a dialog. The sale is already saved.
     private func printFailureSection(_ failed: FailedSale) -> some View {
         Section {
-            Label("Struk #\(failed.number) gagal dicetak", systemImage: "printer.slash")
+            BannerRow(systemImage: "printer.slash") {
+                Text("Struk #\(failed.number) gagal dicetak")
+            }
             Button("Cetak ulang") { printer.reprint(saleID: failed.id) }
                 .accessibilityIdentifier("SellView.reprint")
             Button("Tutup") { printer.dismissFailure() }
@@ -176,32 +180,61 @@ struct SellCartPane: View {
     }
 }
 
+/// At accessibility sizes the line total drops under the name, as the payout and stocktake rows
+/// do: beside a long name it had no width left and wrapped mid-number.
+/// An icon and a sentence in a list row. Not a `Label`: at accessibility sizes a Label in this
+/// list put its icon in the leading gutter and laid the title out wider than the row, clipped at
+/// the left edge.
+private struct BannerRow<Title: View>: View {
+    let systemImage: String
+    @ViewBuilder let title: Title
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: systemImage)
+            title.multilineTextAlignment(.leading)
+        }
+    }
+}
+
 private struct CartRow: View {
     let line: SaleDraft.Line
     let total: LineTotal
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(line.cart.name)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                details
+                MoneyText(total.net).monospacedDigit()
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                details
+                Spacer()
+                MoneyText(total.net).monospacedDigit()
+            }
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(line.cart.name)
+            HStack(spacing: 4) {
+                Text(verbatim: line.cart.quantity.formatted(MoneyFormat.plain))
+                Text(verbatim: "×")
+                MoneyText(line.cart.unitPrice)
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            if total.discount > .zero {
                 HStack(spacing: 4) {
-                    Text(verbatim: line.cart.quantity.formatted(MoneyFormat.plain))
-                    Text(verbatim: "×")
-                    MoneyText(line.cart.unitPrice)
+                    Text("Diskon")
+                    MoneyText(total.discount)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                if total.discount > .zero {
-                    HStack(spacing: 4) {
-                        Text("Diskon")
-                        MoneyText(total.discount)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
             }
-            Spacer()
-            MoneyText(total.net).monospacedDigit()
         }
     }
 }
