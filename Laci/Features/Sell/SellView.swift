@@ -85,6 +85,14 @@ struct SellView: View {
                 }
                 ToolbarItem {
                     NavigationLink {
+                        StocktakeView(dependencies: dependencies)
+                    } label: {
+                        Label("Stok opname", systemImage: "list.clipboard")
+                    }
+                    .accessibilityIdentifier("SellView.stocktake")
+                }
+                ToolbarItem {
+                    NavigationLink {
                         SettingsView(dependencies: dependencies)
                     } label: {
                         Label("Pengaturan", systemImage: "gearshape")
