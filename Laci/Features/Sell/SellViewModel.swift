@@ -2,6 +2,7 @@ import Foundation
 import LaciCore
 import LaciMoney
 import Observation
+import os
 
 /// Why a checkout was refused. Decided here, in the view model, so a short tender never reaches
 /// the repository (SPEC §3.1.5). The view owns the wording.
@@ -16,6 +17,23 @@ enum TenderError: Hashable {
 enum NonCashMethod: String, Hashable, CaseIterable {
     case qris
     case transfer
+}
+
+/// A scanned code no product owns; "create SKU with this barcode" is prefilled from it (SPEC §3.1.2).
+struct PendingBarcode: Hashable, Identifiable {
+    let value: String
+    let symbology: Symbology
+
+    var id: String {
+        value
+    }
+}
+
+/// What the cashier is told when a scan adds nothing (SPEC §6): a misread and a missing product
+/// are different problems, so a bad checksum says "scan again" and never "unknown product".
+enum ScanNotice: Hashable {
+    case scanAgain
+    case lookupFailed
 }
 
 /// The sell screen's state. Every amount comes from `Pricing` or `Tender`; the only arithmetic
@@ -33,12 +51,20 @@ final class SellViewModel {
     private(set) var lastSale: Sale?
     /// An earlier trading day that was never closed (SPEC §3.3.5); the sell screen banners it.
     private(set) var openPriorDay: Date?
+    private(set) var scanNotice: ScanNotice?
+    private(set) var pendingBarcode: PendingBarcode?
+    /// Counts accepted scans; the views key haptic and audible feedback on it.
+    private(set) var scansAccepted = 0
+    /// Shared with the camera controller so a deleted line can be re-scanned at once (SPEC §6).
+    let scanDebouncer = ScanDebouncer(window: .milliseconds(1200))
 
     private let products: any ProductRepository
     private let sales: any SaleRepository
     private let closeOuts: any CloseOutRepository
     private let printer: PrinterCoordinator
     private let now: () -> Date
+    private let signposter = OSSignposter(subsystem: "id.laci", category: "scan")
+    private let log = Logger(subsystem: "id.laci", category: "scan")
 
     init(dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
         products = dependencies.products
@@ -155,10 +181,62 @@ final class SellViewModel {
 
     func remove(sku: String) {
         lines.removeAll { $0.cart.sku == sku }
+        scanDebouncer.reset()
     }
 
     func clearTenderError() {
         tenderError = nil
+    }
+
+    // MARK: Scanning
+
+    /// Every read lands here: camera, keyboard wedge and manual entry (SPEC §6). `symbology` is
+    /// nil when no camera saw the code; it is then derived from the payload's shape.
+    func didRead(code: String, symbology: Symbology?) {
+        let interval = signposter.beginInterval("scan-to-cart")
+        defer { signposter.endInterval("scan-to-cart", interval) }
+        // A wedge sends the payload plus Return.
+        let code = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return }
+        let lookup: ScanLookup
+        do {
+            lookup = try products.lookup(scannedCode: code)
+        } catch {
+            log.error("lookup failed: \(String(describing: error), privacy: .public)")
+            scanNotice = .lookupFailed
+            return
+        }
+        switch lookup {
+        case let .product(product):
+            add(product)
+            scansAccepted += 1
+            scanNotice = nil
+            log.info("scan added \(product.sku, privacy: .private)")
+        case .badChecksum:
+            scanNotice = .scanAgain
+            log.info("scan rejected: bad checksum")
+        case .unknownProduct:
+            scanNotice = nil
+            pendingBarcode = PendingBarcode(value: code, symbology: symbology ?? Self.symbology(of: code))
+            log.info("scan unknown \(code, privacy: .private)")
+        }
+    }
+
+    func clearScanNotice() {
+        scanNotice = nil
+    }
+
+    func clearPendingBarcode() {
+        pendingBarcode = nil
+    }
+
+    /// A wedge or typed payload carries no type: EAN shapes are recognised, and anything else is
+    /// recorded as Code 128, which is what those scanners read off a non-EAN label.
+    private static func symbology(of code: String) -> Symbology {
+        if case let .valid(symbology) = EAN.validate(code) {
+            return symbology
+        }
+        return .code128
     }
 
     // MARK: Checkout
