@@ -81,7 +81,16 @@ struct LaciApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        let session = AppSession.live()
+        let launch = LaunchEnvironment.current
+        #if DEBUG
+            // Every UI-test launch starts from clean settings, so one test's printer, wedge or
+            // backup toggle never reaches the next. Before the session: the printer coordinator
+            // and the backup service read their settings as they are built.
+            if launch.isUITesting {
+                UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier ?? "id.Laci")
+            }
+        #endif
+        let session = AppSession.forLaunch(launch)
         // SPEC §7.3: the shop switches the printer on at 7am and Laci is already connected at the
         // first sale, not after someone opens Settings.
         session.dependencies.printer.start()

@@ -71,23 +71,64 @@ final class AppSession {
         restoreNotice = nil
     }
 
-    static func live() -> AppSession {
-        AppSession(
+    /// The session a launch gets: the live store, or under DEBUG the UI-test store the environment
+    /// asks for.
+    static func forLaunch(_ launch: LaunchEnvironment = .current) -> AppSession {
+        #if DEBUG
+            if launch.isUITesting {
+                return uiTesting(launch)
+            }
+        #endif
+        return live(offline: launch.isOffline)
+    }
+
+    static func live(offline: Bool = false) -> AppSession {
+        let location: @Sendable () -> BackupLocation? = if offline {
+            { nil }
+        } else {
+            BackupService.liveLocation
+        }
+        return AppSession(
             dependencies: .live(),
-            backups: BackupService(storeURL: Store.storeURL, location: BackupService.liveLocation)
+            backups: BackupService(storeURL: Store.storeURL, location: location),
+            unlock: UnlockStore(simulatesOffline: offline)
         )
     }
 
-    /// In-memory dependencies and a backup service pointed at a throwaway folder, for previews.
-    static func inMemory() throws -> AppSession {
+    /// In-memory dependencies and a backup service pointed at a throwaway folder, for previews and
+    /// UI tests. `offline` leaves the backup container missing and the store price unloadable.
+    static func inMemory(offline: Bool = false) throws -> AppSession {
         let scratch = FileManager.default.temporaryDirectory.appending(path: "laci-preview-\(UUID().uuidString)")
+        let fallback = scratch.appending(path: "Backups")
+        let location: @Sendable () -> BackupLocation? = if offline {
+            { nil }
+        } else {
+            { .localFallback(fallback) }
+        }
         return try AppSession(
             dependencies: .inMemory(),
             backups: BackupService(
                 storeURL: scratch.appending(path: "Laci.store"),
-                location: { .localFallback(scratch.appending(path: "Backups")) },
+                location: location,
                 stagingRoot: scratch.appending(path: "Staging")
-            )
+            ),
+            unlock: UnlockStore(simulatesOffline: offline)
         )
     }
+
+    #if DEBUG
+        /// A UI test cannot recover from a store that failed to build any more than a shop can, so
+        /// this stops with the reason, the same policy as `Dependencies.live()`.
+        static func uiTesting(_ launch: LaunchEnvironment) -> AppSession {
+            do {
+                let session = try inMemory(offline: launch.isOffline)
+                if launch.loadsFixture {
+                    _ = try DebugFixtures.loadWarung200(into: session.dependencies)
+                }
+                return session
+            } catch {
+                fatalError("Laci cannot build its UI-test store: \(error)")
+            }
+        }
+    #endif
 }
