@@ -26,8 +26,9 @@ struct RestoreListView: View {
                             RestoreConfirmView(archive: archive)
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(archive.createdAt, format: DateFormat.dateTime)
-                                Text("\(archive.name) · \(ByteCountFormatStyle().format(Int64(archive.byteCount)))")
+                                Text(verbatim: archive.createdAt.formatted(DateFormat.dateTime))
+                                let size = ByteCountFormatStyle().format(Int64(archive.byteCount))
+                                Text(verbatim: "\(archive.name) · \(size)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }

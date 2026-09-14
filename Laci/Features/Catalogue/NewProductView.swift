@@ -50,7 +50,7 @@ struct NewProductView: View {
                 }
                 if let error = viewModel.error {
                     Section {
-                        Text(error)
+                        Text(error.message)
                             .foregroundStyle(.red)
                             .accessibilityIdentifier("NewProductView.error")
                     }

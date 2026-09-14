@@ -143,7 +143,7 @@ struct PaywallView: View {
         }
     }
 
-    private func label(for notice: Notice) -> String {
+    private func label(for notice: Notice) -> LocalizedStringResource {
         switch notice {
         case .unverified: "Pembelian tidak bisa diverifikasi di perangkat ini. Coba Pulihkan pembelian."
         case let .purchaseFailed(reason): "Pembelian gagal: \(reason)"

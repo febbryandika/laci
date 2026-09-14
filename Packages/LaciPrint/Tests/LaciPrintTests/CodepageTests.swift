@@ -20,8 +20,19 @@ struct CodepageTests {
             "Kopi Kapal Api “Special” – 65g…",
             "Rp\u{00A0}15.000 → Rp 14.000 • Promo",
             "Croissant 1€ ★",
-        ]
+        ] + japanese
     }
+
+    /// Japanese product names as a Japanese-speaking owner would type them: kanji, hiragana,
+    /// katakana with the prolonged sound mark and middle dot, an ideographic space, full-width
+    /// digits and Latin, and half-width katakana.
+    static let japanese = [
+        "醤油 キッコーマン 1L",
+        "コーヒー・豆　２５０ｇ",
+        "インドミー ミーゴレン",
+        "たまご １０個入り",
+        "ｱｲｽｸﾘｰﾑ",
+    ]
 
     @Test("Forty real product names plus emoji and the SPEC's awkward cases encode to printable ASCII")
     func productNamesArePrintableASCII() throws {
@@ -46,6 +57,20 @@ struct CodepageTests {
     ])
     func fallbacks(input: String, expected: String) {
         #expect(Codepage.cp437.transliterate(input) == expected)
+    }
+
+    @Test("Japanese folds predictably: kana and kanji become one ? each, width forms become ASCII", arguments: [
+        ("醤油 キッコーマン 1L", "?? ???-?? 1L"),
+        ("コーヒー・豆　２５０ｇ", "?-?-.? 250g"),
+        ("インドミー ミーゴレン", "????- ?-???"),
+        ("たまご １０個入り", "??? 10???"),
+        ("ｱｲｽｸﾘｰﾑ", "???????"),
+    ])
+    func japaneseNames(input: String, expected: String) {
+        let folded = Codepage.cp437.transliterate(input)
+        #expect(folded == expected)
+        #expect(folded.count == input.count, "every Character keeps its column")
+        #expect(Codepage.cp437.encode(input).count == folded.count)
     }
 
     @Test("Characters CP437 has are kept and encoded as the printer's own byte", arguments: [

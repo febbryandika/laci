@@ -14,10 +14,10 @@ struct RestoreConfirmView: View {
     var body: some View {
         Form {
             Section("Cadangan") {
-                LabeledContent("Dibuat") { Text(viewModel.archive.createdAt, format: DateFormat.dateTime) }
+                LabeledContent("Dibuat") { Text(verbatim: viewModel.archive.createdAt.formatted(DateFormat.dateTime)) }
                 LabeledContent("Ukuran") { Text(ByteCountFormatStyle().format(Int64(viewModel.archive.byteCount))) }
                 LabeledContent("Versi Laci") {
-                    Text("\(viewModel.archive.manifest.appVersion) (\(viewModel.archive.manifest.build))")
+                    Text(verbatim: "\(viewModel.archive.manifest.appVersion) (\(viewModel.archive.manifest.build))")
                 }
             }
             Section {

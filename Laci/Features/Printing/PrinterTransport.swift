@@ -273,7 +273,7 @@ extension PrinterTransport {
 
     func didFailToConnect(_ id: UUID, reason: String?) {
         guard peripheral?.identifier == id else { return }
-        finishConnect(throwing: PrintError.transport(reason ?? "gagal terhubung"))
+        finishConnect(throwing: PrintError.transport(reason ?? String(localized: "gagal terhubung")))
     }
 
     func didDisconnect(_ id: UUID) {

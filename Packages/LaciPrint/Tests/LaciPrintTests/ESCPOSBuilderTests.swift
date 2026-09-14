@@ -73,6 +73,9 @@ struct ESCPOSRowTests {
         ("Total", String(repeating: "9", count: 60)), // right side wider than the paper
         (String(repeating: "x", count: 31), "Rp 1"), // exact fit minus one
         (String(repeating: "x", count: 27), "Rp 1"), // no room for the gutter at 32
+        ("醤油 キッコーマン 1L", "Rp 25.000"), // kana and kanji fold one-to-one
+        ("コーヒー・豆　２５０ｇ ブレンド スペシャル", "Rp 125.000"), // ja name past the budget at 32
+        (String(repeating: "醤", count: 50), "Rp 1"), // all-kanji, must clip at both widths
     ]
 
     struct Case: Sendable {
@@ -96,6 +99,13 @@ struct ESCPOSRowTests {
         var builder = ESCPOSBuilder(columns: 32)
         builder.row("Mie Sedaap Goreng \"Ayam Krispi\" 90g", "Rp 3.500")
         #expect(receiptText(builder.data).first == "Mie Sedaap Goreng \"Aya. Rp 3.500")
+    }
+
+    @Test("A Japanese name clips on a Character boundary and the ? run never wraps")
+    func japaneseClip() {
+        var builder = ESCPOSBuilder(columns: 32)
+        builder.row("コーヒー・豆　２５０ｇ ブレンド スペシャル", "Rp 125.000")
+        #expect(receiptText(builder.data).first == "?-?-.? 250g ???? ???. Rp 125.000")
     }
 
     @Test("A short left side is padded so the right side ends on the last column")

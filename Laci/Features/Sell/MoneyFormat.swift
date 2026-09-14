@@ -36,6 +36,8 @@ nonisolated struct SpokenRupiah: FormatStyle {
         let number = value.formatted(
             Decimal.FormatStyle.number.locale(Locale(identifier: "id_ID")).precision(.fractionLength(0 ... 2))
         )
-        return "\(number) rupiah"
+        return String(
+            localized: "\(number) rupiah", comment: "VoiceOver label for an amount; %@ is the id_ID-grouped number"
+        )
     }
 }

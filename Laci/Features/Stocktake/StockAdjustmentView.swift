@@ -27,7 +27,7 @@ struct StockAdjustmentView: View {
                 }
                 if let product = viewModel.product {
                     LabeledContent(product.name) {
-                        Text("stok \(product.stockOnHand, format: MoneyFormat.plain) \(product.unit)")
+                        Text("stok \(product.stockOnHand.formatted(MoneyFormat.plain)) \(product.unit)")
                             .monospacedDigit()
                     }
                     .accessibilityIdentifier("StockAdjustmentView.product")
@@ -51,7 +51,8 @@ struct StockAdjustmentView: View {
                     .disabled(viewModel.product == nil)
                     .accessibilityIdentifier("StockAdjustmentView.save")
                 if let saved = viewModel.saved {
-                    Text("Tersimpan: \(saved.sku) \(saved.delta, format: MoneyFormat.plain.sign(strategy: .always()))")
+                    let delta = saved.delta.formatted(MoneyFormat.plain.sign(strategy: .always()))
+                    Text("Tersimpan: \(saved.sku) \(delta)")
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("StockAdjustmentView.saved")
                 }

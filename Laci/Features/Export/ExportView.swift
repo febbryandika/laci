@@ -12,14 +12,14 @@ struct ExportView: View {
 
     var body: some View {
         Form {
+            // The labels follow the UI language; only the picker itself is pinned to the shop's
+            // locale and zone, so the dates it shows are the shop's (SPEC §9).
             Section("Rentang hari") {
-                DatePicker("Dari", selection: $viewModel.firstDay, displayedComponents: .date)
+                dayPicker("Dari", selection: $viewModel.firstDay)
                     .accessibilityIdentifier("ExportView.firstDay")
-                DatePicker("Sampai", selection: $viewModel.lastDay, displayedComponents: .date)
+                dayPicker("Sampai", selection: $viewModel.lastDay)
                     .accessibilityIdentifier("ExportView.lastDay")
             }
-            .environment(\.timeZone, ShopDefaults.timeZone)
-            .environment(\.locale, ShopDefaults.locale)
             Section {
                 exportButton("Penjualan", kind: .sales)
                 exportButton("Baris penjualan", kind: .saleLines)
@@ -59,7 +59,16 @@ struct ExportView: View {
         )
     }
 
-    private func exportButton(_ title: String, kind: ExportKind) -> some View {
+    private func dayPicker(_ label: LocalizedStringKey, selection: Binding<Date>) -> some View {
+        LabeledContent(label) {
+            DatePicker(label, selection: selection, displayedComponents: .date)
+                .labelsHidden()
+                .environment(\.timeZone, ShopDefaults.timeZone)
+                .environment(\.locale, ShopDefaults.locale)
+        }
+    }
+
+    private func exportButton(_ title: LocalizedStringKey, kind: ExportKind) -> some View {
         Button(title) { viewModel.prepare(kind) }
             .accessibilityIdentifier("ExportView.\(kind.rawValue)")
     }

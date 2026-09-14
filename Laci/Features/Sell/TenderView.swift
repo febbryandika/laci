@@ -19,6 +19,7 @@ struct TenderView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Batal") { dismiss() }
                         .keyboardShortcut(.cancelAction)
+                        .accessibilityIdentifier("TenderView.cancel")
                 }
             }
         }

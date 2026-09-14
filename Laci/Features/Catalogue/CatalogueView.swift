@@ -123,19 +123,32 @@ struct CatalogueView: View {
     }
 }
 
+/// The price drops under the name at accessibility sizes, as every two-column row does.
 private struct CatalogueRow: View {
     let product: Product
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(product.name)
-                Text("\(product.sku) · \(product.unit)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                details
+                MoneyText(product.price).monospacedDigit()
             }
-            Spacer()
-            MoneyText(product.price).monospacedDigit()
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                details
+                Spacer()
+                MoneyText(product.price).monospacedDigit()
+            }
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(product.name)
+            Text(verbatim: "\(product.sku) · \(product.unit)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 }

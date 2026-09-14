@@ -36,7 +36,7 @@ struct CatalogueImportView: View {
                 ) { result in
                     switch result {
                     case let .success(url): viewModel.read(url)
-                    case .failure: viewModel.fail("Berkas tidak bisa dibuka")
+                    case .failure: viewModel.fail(.unopenable)
                     }
                 }
                 .onAppear {
@@ -65,11 +65,11 @@ struct CatalogueImportView: View {
             }
         case let .previewed(preview):
             previewForm(preview)
-        case let .failed(message):
+        case let .failed(failure):
             ContentUnavailableView {
                 Label("Impor gagal", systemImage: "exclamationmark.triangle")
             } description: {
-                Text(message)
+                Text(failure.message)
             } actions: {
                 Button("Pilih berkas lain") {
                     viewModel.reset()
@@ -95,11 +95,11 @@ struct CatalogueImportView: View {
     private func previewForm(_ preview: ImportPreview) -> some View {
         Form {
             Section {
-                LabeledContent("Ditambah") { Text("\(preview.added.count)") }
+                LabeledContent("Ditambah") { Text(preview.added.count, format: .number) }
                     .accessibilityIdentifier("CatalogueImportView.added")
-                LabeledContent("Diperbarui") { Text("\(preview.updated.count)") }
+                LabeledContent("Diperbarui") { Text(preview.updated.count, format: .number) }
                     .accessibilityIdentifier("CatalogueImportView.updated")
-                LabeledContent("Ditolak") { Text("\(preview.rejected.count)") }
+                LabeledContent("Ditolak") { Text(preview.rejected.count, format: .number) }
                     .accessibilityIdentifier("CatalogueImportView.rejected")
             } footer: {
                 Text("Diterapkan seluruhnya atau tidak sama sekali. Baris yang ditolak dilewati.")
@@ -108,7 +108,11 @@ struct CatalogueImportView: View {
                 Section("Ditolak") {
                     ForEach(preview.rejected, id: \.line) { rejection in
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Baris \(rejection.line)\(rejection.sku.map { " · \($0)" } ?? "")")
+                            if let sku = rejection.sku {
+                                Text("Baris \(rejection.line) · \(sku)")
+                            } else {
+                                Text("Baris \(rejection.line)")
+                            }
                             Text(ImportErrorText.label(rejection.reason))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)

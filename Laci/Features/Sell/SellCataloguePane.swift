@@ -16,9 +16,13 @@ struct SellCataloguePane: View {
                     SellSearchField(viewModel: viewModel, focus: focus, onSubmit: onAdd)
                         .textFieldStyle(.roundedBorder)
                     if let notice = viewModel.scanNotice {
-                        Label(ScanNoticeText.label(notice), systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.red)
-                            .accessibilityIdentifier("SellView.scanNotice")
+                        Label {
+                            Text(ScanNoticeText.label(notice))
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle")
+                        }
+                        .foregroundStyle(.red)
+                        .accessibilityIdentifier("SellView.scanNotice")
                     }
                 }
                 .padding()

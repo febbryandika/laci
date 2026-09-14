@@ -16,7 +16,7 @@ final class NewProductViewModel {
     var costText = "0"
     var stockText = "0"
     var tracksStock = true
-    private(set) var error: String?
+    private(set) var error: NewProductError?
 
     private let products: any ProductRepository
     private let transactor: Transactor
@@ -35,11 +35,11 @@ final class NewProductViewModel {
         let sku = sku.trimmingCharacters(in: .whitespaces)
         let name = name.trimmingCharacters(in: .whitespaces)
         let unit = unit.trimmingCharacters(in: .whitespaces)
-        guard !sku.isEmpty else { return fail("SKU wajib diisi") }
-        guard !name.isEmpty else { return fail("Nama wajib diisi") }
-        guard let price = DecimalInput.parse(priceText) else { return fail("Harga jual tidak valid") }
-        guard let cost = DecimalInput.parse(costText) else { return fail("Modal tidak valid") }
-        guard let stock = DecimalInput.parse(stockText) else { return fail("Stok awal tidak valid") }
+        guard !sku.isEmpty else { return fail(.skuRequired) }
+        guard !name.isEmpty else { return fail(.nameRequired) }
+        guard let price = DecimalInput.parse(priceText) else { return fail(.priceInvalid) }
+        guard let cost = DecimalInput.parse(costText) else { return fail(.costInvalid) }
+        guard let stock = DecimalInput.parse(stockText) else { return fail(.stockInvalid) }
         let product = Product(
             sku: sku, name: name, unit: unit.isEmpty ? "pcs" : unit, cost: cost, price: price,
             tracksStock: tracksStock, stockOnHand: tracksStock ? stock : 0, updatedAt: now()
@@ -52,18 +52,43 @@ final class NewProductViewModel {
                 }
             }
         } catch CoreError.skuTaken {
-            return fail("SKU sudah dipakai")
+            return fail(.skuTaken)
         } catch let CoreError.barcodeTaken(_, existingSKU) {
-            return fail("Barcode sudah dipakai SKU \(existingSKU)")
+            return fail(.barcodeTaken(sku: existingSKU))
         } catch {
-            return fail("Gagal menyimpan produk")
+            return fail(.saveFailed)
         }
         error = nil
         return product
     }
 
-    private func fail(_ message: String) -> Product? {
-        error = message
+    private func fail(_ reason: NewProductError) -> Product? {
+        error = reason
         return nil
+    }
+}
+
+/// Why a product could not be saved; the form shows `message`.
+enum NewProductError: Hashable {
+    case skuRequired
+    case nameRequired
+    case priceInvalid
+    case costInvalid
+    case stockInvalid
+    case skuTaken
+    case barcodeTaken(sku: String)
+    case saveFailed
+
+    var message: LocalizedStringResource {
+        switch self {
+        case .skuRequired: "SKU wajib diisi"
+        case .nameRequired: "Nama wajib diisi"
+        case .priceInvalid: "Harga jual tidak valid"
+        case .costInvalid: "Modal tidak valid"
+        case .stockInvalid: "Stok awal tidak valid"
+        case .skuTaken: "SKU sudah dipakai"
+        case let .barcodeTaken(sku): "Barcode sudah dipakai SKU \(sku)"
+        case .saveFailed: "Gagal menyimpan produk"
+        }
     }
 }

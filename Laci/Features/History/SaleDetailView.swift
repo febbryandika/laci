@@ -25,7 +25,7 @@ struct SaleDetailView: View {
                 ContentUnavailableView("Penjualan tidak ditemukan", systemImage: "questionmark")
             }
         }
-        .navigationTitle(viewModel.sale.map { "#\($0.number)" } ?? "Penjualan")
+        .navigationTitle(viewModel.sale.map { Text(verbatim: "#\($0.number)") } ?? Text("Penjualan"))
         .navigationBarTitleDisplayMode(.inline)
         .alert("Batalkan penjualan", isPresented: $confirmingVoid) {
             TextField("Alasan", text: $voidReason)
@@ -55,9 +55,9 @@ struct SaleDetailView: View {
 
     private func headerSection(_ sale: Sale) -> some View {
         Section {
-            LabeledContent("Waktu") { Text(sale.occurredAt, format: DateFormat.dateTime) }
+            LabeledContent("Waktu") { Text(verbatim: sale.occurredAt.formatted(DateFormat.dateTime)) }
             if let voidedAt = sale.voidedAt {
-                LabeledContent("Dibatalkan") { Text(voidedAt, format: DateFormat.dateTime) }
+                LabeledContent("Dibatalkan") { Text(verbatim: voidedAt.formatted(DateFormat.dateTime)) }
                     .foregroundStyle(.red)
                 LabeledContent("Alasan") { Text(sale.voidReason ?? "") }
             }
@@ -179,31 +179,44 @@ struct SaleDetailView: View {
     }
 }
 
+/// Same shape as the cart row: the total drops under the name at accessibility sizes.
 private struct SaleLineRow: View {
     let line: SaleLine
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(line.name)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                details
+                MoneyText(line.lineTotal).monospacedDigit()
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                details
+                Spacer()
+                MoneyText(line.lineTotal).monospacedDigit()
+            }
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(line.name)
+            HStack(spacing: 4) {
+                Text(verbatim: line.quantity.formatted(MoneyFormat.plain))
+                Text(verbatim: "×")
+                MoneyText(line.unitPrice)
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            if line.discountAmount != 0 {
                 HStack(spacing: 4) {
-                    Text(line.quantity, format: MoneyFormat.plain)
-                    Text("×")
-                    MoneyText(line.unitPrice)
+                    Text("Diskon")
+                    MoneyText(line.discountAmount)
                 }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                if line.discountAmount != 0 {
-                    HStack(spacing: 4) {
-                        Text("Diskon")
-                        MoneyText(line.discountAmount)
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
             }
-            Spacer()
-            MoneyText(line.lineTotal).monospacedDigit()
         }
     }
 }
@@ -215,7 +228,7 @@ private struct SaleLineRow: View {
                 SaleDetailView(saleID: UUID(), dependencies: dependencies)
             }
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

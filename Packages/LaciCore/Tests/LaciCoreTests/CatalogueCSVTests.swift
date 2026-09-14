@@ -78,12 +78,21 @@ struct CatalogueCSVTests {
         #expect(parsed.rows.map(\.sku) == ["OK"])
         #expect(parsed.rejected.map(\.line) == [3, 4])
         #expect(parsed.rejected.first?.sku == "BAD")
-        for rejection in parsed.rejected {
-            guard case .malformed = rejection.reason else {
-                Issue.record("expected .malformed at line \(rejection.line)")
-                continue
-            }
-        }
+        #expect(parsed.rejected.map(\.reason) == [
+            .malformed(.priceNotDecimal), .malformed(.columnCount(expected: 8, found: 3)),
+        ])
+    }
+
+    @Test("Each malformed field names its own reason", arguments: [
+        (",Indomie,pcs,1,2,true,0,", ImportRejection.MalformedReason.emptySKU),
+        ("A,,pcs,1,2,true,0,", .emptyName),
+        ("A,Indomie,pcs,x,2,true,0,", .costNotDecimal),
+        ("A,Indomie,pcs,1,2,yes,0,", .tracksStockNotBool),
+        ("A,Indomie,pcs,1,2,true,many,", .stockNotDecimal),
+    ])
+    func malformedReasons(row: String, reason: ImportRejection.MalformedReason) throws {
+        let parsed = try CatalogueCSV.parse("\(Self.header)\n\(row)\n")
+        #expect(parsed.rejected.map(\.reason) == [.malformed(reason)])
     }
 
     @Test("A SKU repeated in the file rejects every occurrence")

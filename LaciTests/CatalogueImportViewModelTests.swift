@@ -60,11 +60,14 @@ struct CatalogueImportViewModelTests {
     @Test("A wrong header fails before any classification")
     func headerMismatch() {
         viewModel.preview(text: "sku,name\nA,B\n")
-        guard case let .failed(message) = viewModel.phase else {
+        guard case let .failed(failure) = viewModel.phase else {
             Issue.record("expected a failure, got \(viewModel.phase)")
             return
         }
-        #expect(message.contains("Kolom tidak sesuai"))
+        #expect(failure == .parse(.headerMismatch(found: ["sku", "name"])))
+        let message = localized(failure.message)
+        let expected = CatalogueCSV.columns.joined(separator: ", ")
+        #expect(message == "Kolom tidak sesuai. Diharapkan: \(expected). Ditemukan: sku, name")
     }
 
     @Test("A rejected row is listed with its line and stays out of the commit")
@@ -76,7 +79,7 @@ struct CatalogueImportViewModelTests {
         }
         #expect(preview.added.isEmpty)
         #expect(preview.rejected.map(\.line) == [2, 3])
-        #expect(ImportErrorText.label(preview.rejected[0].reason) == "SKU muncul dua kali dalam berkas")
+        #expect(localized(ImportErrorText.label(preview.rejected[0].reason)) == "SKU muncul dua kali dalam berkas")
     }
 
     @Test("Commit without a preview does nothing")

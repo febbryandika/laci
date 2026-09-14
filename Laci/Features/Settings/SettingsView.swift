@@ -16,6 +16,9 @@ struct SettingsView: View {
     @State private var semicolonDelimiter = ExportSettings.semicolonDelimiter()
     @State private var committedSales = 0
     @State private var paywallShown = false
+    #if DEBUG
+        @State private var languageOverride = LanguageSettings.override()
+    #endif
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -30,6 +33,9 @@ struct SettingsView: View {
             backupSection
             purchaseSection
             diagnosticsSection
+            #if DEBUG
+                languageSection
+            #endif
         }
         .navigationTitle("Pengaturan")
         .navigationBarTitleDisplayMode(.inline)
@@ -56,7 +62,11 @@ struct SettingsView: View {
                 .accessibilityIdentifier("SettingsView.printerStatus")
             if let remembered = printer.remembered {
                 LabeledContent("Printer tersimpan") {
-                    Text(remembered.name.isEmpty ? "Tanpa nama" : remembered.name)
+                    if remembered.name.isEmpty {
+                        Text("Tanpa nama")
+                    } else {
+                        Text(remembered.name)
+                    }
                 }
             }
             Picker("Lebar kertas", selection: paperWidth) {
@@ -144,7 +154,11 @@ struct SettingsView: View {
             }
             .accessibilityIdentifier("SettingsView.restore")
         } header: {
-            Text(backups.location?.isLocalFallback == true ? "Cadangan lokal (simulator)" : "Cadangan iCloud")
+            if backups.location?.isLocalFallback == true {
+                Text("Cadangan lokal (simulator)")
+            } else {
+                Text("Cadangan iCloud")
+            }
         } footer: {
             Text("Jika iPad hilang, yang tersimpan adalah data sampai cadangan terakhir.")
         }
@@ -158,7 +172,7 @@ struct SettingsView: View {
         }
     }
 
-    private var backupStatusText: String? {
+    private var backupStatusText: LocalizedStringResource? {
         switch session.backups.status {
         case .idle: nil
         case .running: "Menyalin…"
@@ -169,8 +183,20 @@ struct SettingsView: View {
 
     private var diagnosticsSection: some View {
         Section("Diagnostik") {
-            LabeledContent("MTU") { Text(printer.negotiatedMTU.map { "\($0) byte" } ?? "—") }
-            LabeledContent("Cetak terakhir") { Text(outcomeLabel) }
+            LabeledContent("MTU") {
+                if let mtu = printer.negotiatedMTU {
+                    Text("\(mtu) byte")
+                } else {
+                    Text(verbatim: "—")
+                }
+            }
+            LabeledContent("Cetak terakhir") {
+                if let outcomeLabel {
+                    Text(outcomeLabel)
+                } else {
+                    Text(verbatim: "—")
+                }
+            }
             LabeledContent("Durasi") {
                 Text(printer.lastDuration.map {
                     $0.formatted(.units(allowed: [.seconds, .milliseconds], width: .narrow))
@@ -180,6 +206,27 @@ struct SettingsView: View {
             LabeledContent("Skema") { Text(BackupService.schemaVersion) }
         }
     }
+
+    #if DEBUG
+        /// Debug builds only: the shop never picks a language here, the device does. Money and
+        /// dates stay Indonesian whichever language is chosen, which is the point of looking.
+        private var languageSection: some View {
+            Section {
+                Picker("Bahasa", selection: $languageOverride) {
+                    Text("Sistem").tag(LanguageSettings.Language?.none)
+                    Text(verbatim: "Indonesia").tag(Optional(LanguageSettings.Language.indonesian))
+                    Text(verbatim: "English").tag(Optional(LanguageSettings.Language.english))
+                    Text(verbatim: "日本語").tag(Optional(LanguageSettings.Language.japanese))
+                }
+                .onChange(of: languageOverride) { LanguageSettings.save(languageOverride) }
+                .accessibilityIdentifier("SettingsView.languageOverride")
+            } header: {
+                Text("Bahasa (debug)")
+            } footer: {
+                Text("Tutup dan buka lagi Laci untuk menerapkan. Uang dan tanggal tetap Indonesia.")
+            }
+        }
+    #endif
 
     private var storeSizeLabel: String {
         let store = session.backups.storeURL
@@ -191,7 +238,7 @@ struct SettingsView: View {
         Binding(get: { printer.paperWidth }, set: { printer.setPaperWidth($0) })
     }
 
-    private var connectionLabel: String {
+    private var connectionLabel: LocalizedStringResource {
         switch printer.connection {
         case .unavailable: "Bluetooth tidak tersedia di perangkat ini"
         case .off: "Bluetooth mati"
@@ -201,18 +248,18 @@ struct SettingsView: View {
         }
     }
 
-    private var outcomeLabel: String {
+    private var outcomeLabel: LocalizedStringResource? {
         switch printer.lastOutcome {
-        case nil: "—"
+        case nil: nil
         case .printed: "Berhasil"
-        case let .failed(error): "Gagal: \(PrintErrorText.label(error))"
+        case let .failed(error): "Gagal: \(String(localized: PrintErrorText.label(error)))"
         }
     }
 }
 
 /// One wording per backup failure, for Settings and the restore screen.
 enum BackupErrorText {
-    static func label(_ error: BackupError) -> String {
+    static func label(_ error: BackupError) -> LocalizedStringResource {
         switch error {
         case .iCloudUnavailable: "iCloud tidak tersedia. Masuk ke iCloud dan nyalakan iCloud Drive di Pengaturan iPad."
         case let .copyFailed(reason): "Gagal menyalin berkas: \(reason)"
@@ -227,7 +274,7 @@ enum BackupErrorText {
 
 /// One wording per failure, shared by Settings and the pairing screen.
 enum PrintErrorText {
-    static func label(_ error: PrintError) -> String {
+    static func label(_ error: PrintError) -> LocalizedStringResource {
         switch error {
         case .bluetoothUnavailable: "Bluetooth tidak tersedia"
         case .bluetoothOff: "Bluetooth mati"
@@ -236,7 +283,8 @@ enum PrintErrorText {
         case .busy: "printer sedang sibuk"
         case .paperOut: "kertas habis"
         case .saleNotFound: "penjualan tidak ditemukan"
-        case let .transport(reason): reason
+        // A raw reason from CoreBluetooth; the catalog key is the placeholder alone.
+        case let .transport(reason): "\(reason)"
         }
     }
 }
@@ -249,7 +297,7 @@ enum PrintErrorText {
             }
             .environment(session)
         } else {
-            Text("In-memory store failed")
+            Text(verbatim: "In-memory store failed")
         }
     }
 #endif

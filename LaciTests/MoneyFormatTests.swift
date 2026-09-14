@@ -12,10 +12,12 @@ struct MoneyFormatTests {
         #expect(text.contains("15.000"))
     }
 
-    @Test("Spoken: the Indonesian-grouped number and the currency's name, the same on every device")
+    @Test("Spoken: the Indonesian-grouped number, the same on every device, then the currency's name")
     func spoken() {
-        #expect(Decimal(15000).formatted(MoneyFormat.spoken) == "15.000 rupiah")
-        #expect(Decimal(string: "2500.5")?.formatted(MoneyFormat.spoken) == "2.500,5 rupiah")
+        let whole = Decimal(15000).formatted(MoneyFormat.spoken)
+        #expect(whole.hasPrefix("15.000"))
+        #expect(!whole.contains("15,000"))
+        #expect(Decimal(string: "2500.5")?.formatted(MoneyFormat.spoken).hasPrefix("2.500,5") == true)
     }
 
     @Test("Fractions print only when present", arguments: [("2500", "2.500"), ("2500.5", "2.500,5")])
