@@ -63,8 +63,7 @@ final class SellViewModel: ScanReceiving {
     private let unlock: any UnlockGating
     private let trialLimit: Int
     private let now: () -> Date
-    private let signposter = OSSignposter(subsystem: "id.laci", category: "scan")
-    private let log = Logger(subsystem: "id.laci", category: "scan")
+    private let log = Log.scan
 
     init(
         dependencies: Dependencies, unlock: any UnlockGating, trialLimit: Int = TrialPolicy.saleLimit(),
@@ -204,8 +203,9 @@ final class SellViewModel: ScanReceiving {
     /// Every read lands here: camera, keyboard wedge and manual entry (SPEC §6). `symbology` is
     /// nil when no camera saw the code; it is then derived from the payload's shape.
     func didRead(code: String, symbology: Symbology?) {
-        let interval = signposter.beginInterval("scan-to-cart")
-        defer { signposter.endInterval("scan-to-cart", interval) }
+        // SPEC §10: scan-to-cart, budget 150 ms at p95.
+        let interval = Log.signposter.beginInterval("scan-to-cart")
+        defer { Log.signposter.endInterval("scan-to-cart", interval) }
         // A wedge sends the payload plus Return.
         let code = code.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !code.isEmpty else { return }
@@ -222,14 +222,14 @@ final class SellViewModel: ScanReceiving {
             add(product)
             scansAccepted += 1
             scanNotice = nil
-            log.info("scan added \(product.sku, privacy: .private)")
+            log.notice("scan added \(product.sku, privacy: .private)")
         case .badChecksum:
             scanNotice = .scanAgain
-            log.info("scan rejected: bad checksum")
+            log.notice("scan rejected: bad checksum")
         case .unknownProduct:
             scanNotice = nil
             pendingBarcode = PendingBarcode(value: code, symbology: symbology ?? Self.symbology(of: code))
-            log.info("scan unknown \(code, privacy: .private)")
+            log.notice("scan unknown \(code, privacy: .private)")
         }
     }
 
@@ -318,14 +318,23 @@ final class SellViewModel: ScanReceiving {
     }
 
     private func commit(_ payment: SaleDraft.Payment, totals: SaleTotals) {
+        // SPEC §10: checkout tap to last chunk acknowledged, budget 3 s at p95. Ended by the printer
+        // coordinator when the transport's last write is acknowledged, or fails.
+        let checkout = Log.signposter.beginInterval(PrinterCoordinator.checkoutInterval)
         let draft = SaleDraft(lines: lines, totals: totals, payment: payment, occurredAt: now())
         let sale: Sale
         do {
             sale = try sales.commit(draft, tradingDay: ShopDefaults.tradingDay, timeZone: ShopDefaults.timeZone)
         } catch {
+            Log.signposter.endInterval(PrinterCoordinator.checkoutInterval, checkout, "commit failed")
+            Log.sale.error("sale commit failed: \(String(describing: error), privacy: .public)")
             tenderError = .commitFailed
             return
         }
+        Log.sale.notice("""
+        sale #\(sale.number, privacy: .public) committed, \(sale.lines.count, privacy: .public) lines, \
+        \(sale.paymentMethodRaw, privacy: .public), total \(sale.total, privacy: .private)
+        """)
         lastSale = sale
         lines = []
         selectedSKU = nil
@@ -334,7 +343,7 @@ final class SellViewModel: ScanReceiving {
         tenderError = nil
         // Last, and never awaited: the sale is saved and the cart is clear whatever the printer does
         // (SPEC §7.3).
-        printer.printReceipt(for: sale)
+        printer.printReceipt(for: sale, checkout: checkout)
     }
 }
 

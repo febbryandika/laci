@@ -24,7 +24,7 @@ nonisolated enum PrinterConnection: Hashable, Sendable {
     case connected(name: String, mtu: Int)
 }
 
-nonisolated enum PrintOutcome: Hashable, Sendable {
+nonisolated enum PrintOutcome: Hashable, Sendable, Codable {
     case printed
     case failed(PrintError)
 }

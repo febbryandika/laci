@@ -15,6 +15,7 @@ final class PrinterCoordinator {
     private(set) var remembered: RememberedPrinter?
     private(set) var lastOutcome: PrintOutcome?
     private(set) var lastDuration: Duration?
+    private(set) var lastPrintedAt: Date?
     /// The sale whose struk is being printed right now; the completed view says "Mencetak…" for it.
     private(set) var inFlightSaleID: UUID?
     /// The non-blocking banner (SPEC §9 states). Cleared by a successful reprint or by the cashier.
@@ -26,8 +27,14 @@ final class PrinterCoordinator {
     private let defaults: UserDefaults
     private let now: () -> Date
     private let clock = ContinuousClock()
-    private let log = Logger(subsystem: "id.laci", category: "print")
+    private let log = Log.printing
     private var connectionTask: Task<Void, Never>?
+    /// Open "checkout-to-printed" intervals, by sale. Begun and ended on the main actor, so the
+    /// interval state never crosses into the detached print task.
+    private var checkoutIntervals: [UUID: OSSignpostIntervalState] = [:]
+
+    /// SPEC §10: checkout tap to last chunk acknowledged.
+    static let checkoutInterval: StaticString = "checkout-to-printed"
 
     init(
         transport: any PrinterTransporting, sales: any SaleRepository, products: any ProductRepository,
@@ -40,6 +47,10 @@ final class PrinterCoordinator {
         self.now = now
         paperWidth = PrinterSettings.paperWidth(in: defaults)
         remembered = PrinterSettings.remembered(in: defaults)
+        let record = PrintRecordSettings.last(in: defaults)
+        lastOutcome = record?.outcome
+        lastDuration = record?.duration
+        lastPrintedAt = record?.printedAt
     }
 
     /// After a restore the store is a new container, but the transport's connection stream has
@@ -83,8 +94,12 @@ final class PrinterCoordinator {
 
     /// Returns before a byte is written. The caller must already have committed the sale and
     /// cleared the cart; this is the single most important ordering in the app (SPEC §7.3).
-    func printReceipt(for sale: Sale) {
+    /// `checkout` is the open signpost interval begun at the checkout tap; it ends in `record`.
+    func printReceipt(for sale: Sale, checkout: OSSignpostIntervalState? = nil) {
         inFlightSaleID = sale.id
+        if let checkout {
+            checkoutIntervals[sale.id] = checkout
+        }
         let receipt = ReceiptFactory.make(sale, products: products, isReprint: false)
         run(receipt: receipt, sale: FailedSale(id: sale.id, number: sale.number))
     }
@@ -138,15 +153,29 @@ final class PrinterCoordinator {
         }
     }
 
+    /// How many checkout intervals are still waiting on the printer; for the tests.
+    var openCheckoutIntervals: Int {
+        checkoutIntervals.count
+    }
+
     private func record(_ outcome: PrintOutcome, duration: Duration?, sale: FailedSale?) {
         lastOutcome = outcome
         lastDuration = duration
+        let printedAt = now()
+        lastPrintedAt = printedAt
+        PrintRecordSettings.save(PrintRecord(outcome: outcome, duration: duration, printedAt: printedAt), in: defaults)
         if inFlightSaleID == sale?.id {
             inFlightSaleID = nil
         }
+        if let id = sale?.id, let interval = checkoutIntervals.removeValue(forKey: id) {
+            switch outcome {
+            case .printed: Log.signposter.endInterval(Self.checkoutInterval, interval, "printed")
+            case .failed: Log.signposter.endInterval(Self.checkoutInterval, interval, "failed")
+            }
+        }
         switch outcome {
         case .printed:
-            log.info("print ok in \(duration.map { "\($0)" } ?? "-", privacy: .public)")
+            log.notice("print ok in \(duration.map { "\($0)" } ?? "-", privacy: .public)")
             guard let sale else { return }
             if failedSale?.id == sale.id {
                 failedSale = nil

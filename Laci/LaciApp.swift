@@ -97,6 +97,9 @@ struct LaciApp: App {
         // SPEC §5.1: family sharing, refunds and revocations arrive on the updates listener and
         // nowhere else, so it starts at launch. The entitlement is only checked at checkout.
         session.unlock.start()
+        // SPEC §5.4: Crashlytics is configured only on a yes given earlier; otherwise it is not in
+        // the process at all.
+        session.crashConsent.startIfConsented()
         // SPEC §5.3: the charging-time backup. Registration must precede the end of launch.
         BackupScheduler.register(service: session.backups)
         session.backups.onAutomaticChanged = { BackupScheduler.schedule(enabled: $0) }

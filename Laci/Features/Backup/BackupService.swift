@@ -62,7 +62,7 @@ final class BackupService {
     private let shopName: String
     private let timeZone: TimeZone
     private let now: () -> Date
-    private let log = Logger(subsystem: "id.laci", category: "backup")
+    private let log = Log.store
 
     init(
         storeURL: URL, location: @escaping @Sendable () -> BackupLocation?,
@@ -119,7 +119,7 @@ final class BackupService {
                     shopName: shopName, files: files
                 )
             }
-            log.info("backup written \(url.lastPathComponent, privacy: .public)")
+            log.notice("backup written \(url.lastPathComponent, privacy: .public)")
         } catch {
             log.error("backup failed: \(String(describing: error), privacy: .public)")
             status = .failed(error)

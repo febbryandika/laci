@@ -28,3 +28,6 @@ CLAUDE.md
 
 # Claude Code local config and skills
 .claude/
+
+# Firebase app config: added by hand in Xcode for Crashlytics, injected in CI later (Phase 14).
+Laci/GoogleService-Info.plist

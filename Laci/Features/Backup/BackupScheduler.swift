@@ -8,7 +8,7 @@ import os
 @MainActor
 enum BackupScheduler {
     static let identifier = "id.laci.backup"
-    private static let log = Logger(subsystem: "id.laci", category: "backup")
+    private static let log = Log.store
 
     /// Must run before the app finishes launching. The handler is queued on main, so the
     /// non-Sendable `BGTask` never leaves the main actor.

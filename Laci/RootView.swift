@@ -4,10 +4,13 @@ import SwiftUI
 /// The tree is keyed on the session generation so a restore rebuilds every screen on the new store.
 struct RootView: View {
     @Environment(AppSession.self) private var session
+    @State private var consentShown = false
 
     var body: some View {
         SellView(dependencies: session.dependencies, unlock: session.unlock)
             .id(session.generation)
+            .sheet(isPresented: $consentShown) { CrashConsentView(consent: session.crashConsent) }
+            .onAppear { consentShown = session.crashConsent.shouldAsk(launch: .current) }
             .alert("Pemulihan data", isPresented: noticeShown, presenting: session.restoreNotice) { _ in
                 Button("OK") { session.dismissRestoreNotice() }
             } message: { notice in

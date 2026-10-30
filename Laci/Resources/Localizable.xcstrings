@@ -360,6 +360,22 @@
         }
       }
     },
+    "Bagikan log": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share log"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログを共有"
+          }
+        }
+      }
+    },
     "Bahasa": {
       "localizations": {
         "en": {
@@ -736,6 +752,38 @@
         }
       }
     },
+    "Belum dipasangkan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not paired"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未ペアリング"
+          }
+        }
+      }
+    },
+    "Belum ditanya": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not asked yet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未確認"
+          }
+        }
+      }
+    },
     "Belum ditentukan": {
       "localizations": {
         "en": {
@@ -768,6 +816,22 @@
         }
       }
     },
+    "Belum pernah": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なし"
+          }
+        }
+      }
+    },
     "Berhasil": {
       "localizations": {
         "en": {
@@ -780,6 +844,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "成功"
+          }
+        }
+      }
+    },
+    "Berisi 500 baris log terakhir sejak Laci dibuka. Jumlah uang dan nama produk tidak ikut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contains the last 500 log lines since Laci was opened. Amounts and product names are not included."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laciを開いてからの最新500行のログです。金額と商品名は含まれません。"
           }
         }
       }
@@ -1088,6 +1168,22 @@
         }
       }
     },
+    "Cadangan tersimpan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup saved."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップを保存しました。"
+          }
+        }
+      }
+    },
     "Cadangan tidak terbaca: %@": {
       "localizations": {
         "en": {
@@ -1360,6 +1456,22 @@
         }
       }
     },
+    "Dibatasi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restricted"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "制限あり"
+          }
+        }
+      }
+    },
     "Dibuat": {
       "localizations": {
         "en": {
@@ -1372,6 +1484,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "作成日時"
+          }
+        }
+      }
+    },
+    "Diizinkan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "許可済み"
           }
         }
       }
@@ -1712,6 +1840,22 @@
         }
       }
     },
+    "Gagal: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗: %@"
+          }
+        }
+      }
+    },
     "Ganti semua data dengan cadangan ini?": {
       "localizations": {
         "en": {
@@ -1724,6 +1868,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべてのデータをこのバックアップで置き換えますか？"
+          }
+        }
+      }
+    },
+    "Hanya jejak crash, model perangkat, versi iOS dan versi Laci, ke Google Firebase Crashlytics. Tidak pernah data penjualan. Mematikannya berlaku penuh setelah Laci dibuka ulang.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the crash trace, device model, iOS version and Laci version, to Google Firebase Crashlytics. Never sales data. Turning it off takes full effect after Laci is reopened."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信するのはクラッシュの記録、端末のモデル、iOSとLaciのバージョンのみで、送信先はGoogle Firebase Crashlyticsです。売上データは送信しません。オフにした設定はLaciを開き直すと完全に反映されます。"
           }
         }
       }
@@ -2112,6 +2272,38 @@
         }
       }
     },
+    "Izinkan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "許可する"
+          }
+        }
+      }
+    },
+    "Jangan kirim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't send"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信しない"
+          }
+        }
+      }
+    },
     "Jenis": {
       "localizations": {
         "en": {
@@ -2140,6 +2332,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "割引の種類"
+          }
+        }
+      }
+    },
+    "Jika Laci tertutup sendiri, Laci bisa mengirim laporan ke Google Firebase Crashlytics supaya masalahnya bisa diperbaiki.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Laci closes unexpectedly, it can send a report to Google Firebase Crashlytics so the problem can be fixed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laciが予期せず終了したとき、問題を修正できるようにGoogle Firebase Crashlyticsへレポートを送信できます。"
           }
         }
       }
@@ -2240,6 +2448,22 @@
         }
       }
     },
+    "Jumlah penjualan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sales count"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "売上件数"
+          }
+        }
+      }
+    },
     "Jumlah tidak valid": {
       "localizations": {
         "en": {
@@ -2252,6 +2476,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "金額が無効です"
+          }
+        }
+      }
+    },
+    "Kamera": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラ"
           }
         }
       }
@@ -2560,6 +2800,22 @@
         }
       }
     },
+    "Kirim laporan crash": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send crash reports"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クラッシュレポートを送信"
+          }
+        }
+      }
+    },
     "Kode / SKU": {
       "localizations": {
         "en": {
@@ -2740,6 +2996,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Laciは購入済みです。"
+          }
+        }
+      }
+    },
+    "Laporan crash": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crash reports"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クラッシュレポート"
           }
         }
       }
@@ -3498,6 +3770,22 @@
         }
       }
     },
+    "Penjualan, nama produk, harga, jumlah uang, atau data toko apa pun.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sales, product names, prices, amounts, or any other shop data."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "売上、商品名、価格、金額、その他の店舗データ。"
+          }
+        }
+      }
+    },
     "Penyesuaian": {
       "localizations": {
         "en": {
@@ -3654,6 +3942,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "商品を選択"
+          }
+        }
+      }
+    },
+    "Pilihan ini bisa diubah kapan saja di Pengaturan › Diagnostik.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this at any time in Settings › Diagnostics."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この選択は「設定 › 診断」でいつでも変更できます。"
           }
         }
       }
@@ -4994,6 +5298,22 @@
         }
       }
     },
+    "Tidak pernah dikirim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never sent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信しないもの"
+          }
+        }
+      }
+    },
     "Tidak terhubung": {
       "localizations": {
         "en": {
@@ -5410,6 +5730,22 @@
         }
       }
     },
+    "Yang dikirim": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is sent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信するもの"
+          }
+        }
+      }
+    },
     "gagal terhubung": {
       "localizations": {
         "en": {
@@ -5438,6 +5774,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloudを利用できません。iPadの設定でiCloudにサインインし、iCloud Driveをオンにしてください。"
+          }
+        }
+      }
+    },
+    "iOS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS"
           }
         }
       }
@@ -5556,6 +5908,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "tracks_stock は true か false にしてください"
+          }
+        }
+      }
+    },
+    "• Jejak crash (bagian kode yang sedang berjalan)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Crash trace (the part of the code that was running)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• クラッシュの記録（実行中だったコードの箇所）"
+          }
+        }
+      }
+    },
+    "• Model perangkat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Device model"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• 端末のモデル"
+          }
+        }
+      }
+    },
+    "• Versi iOS dan versi Laci": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• iOS version and Laci version"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• iOSとLaciのバージョン"
           }
         }
       }

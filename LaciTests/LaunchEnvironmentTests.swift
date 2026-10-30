@@ -47,6 +47,17 @@ struct LaunchEnvironmentTests {
         #expect(!launch.isUITesting)
     }
 
+    @Test("The consent screen is asked for only by the consent key")
+    func consent() {
+        let launch = LaunchEnvironment(environment: [LaunchEnvironment.consentKey: "1"])
+        #expect(!LaunchEnvironment(environment: [:]).asksConsent)
+        #if DEBUG
+            #expect(launch.asksConsent)
+        #else
+            #expect(!launch.asksConsent)
+        #endif
+    }
+
     @Test("Anything but 1 is off", arguments: ["", "0", "true", "yes"])
     func malformed(raw: String) {
         let launch = LaunchEnvironment(environment: [

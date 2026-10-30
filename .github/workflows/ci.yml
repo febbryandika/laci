@@ -42,6 +42,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: bash scripts/assert-print-imports.sh
 
+  crash-reporting:
+    name: Crashlytics boundary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/assert-crash-reporting.sh
+
   lint:
     name: SwiftLint + SwiftFormat
     runs-on: macos-26

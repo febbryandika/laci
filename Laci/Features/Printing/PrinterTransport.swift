@@ -19,7 +19,7 @@ actor PrinterTransport: PrinterTransporting {
     private let connectionContinuation: AsyncStream<PrinterConnection>.Continuation
     private let central: CBCentralManager
     private let delegate: CentralDelegate
-    private let log = Logger(subsystem: "id.laci", category: "print")
+    private let log = Log.printing
 
     private var peripheral: CBPeripheral?
     private var writeChar: CBCharacteristic?
@@ -189,11 +189,17 @@ actor PrinterTransport: PrinterTransporting {
         let mtu = peripheral.maximumWriteValueLength(for: .withResponse)
         let chunks = payload.chunked(into: mtu)
         for (index, chunk) in chunks.enumerated() {
-            log.info("""
+            // Debug, not kept: a 20-byte MTU makes ~150 of these per receipt, which would push
+            // everything else out of a 500-line shared log. The summary below is what is kept.
+            log.debug("""
             print chunk \(index + 1, privacy: .public)/\(chunks.count, privacy: .public), mtu \(mtu, privacy: .public)
             """)
             try await write(chunk, to: writeChar, on: peripheral)
         }
+        log.notice("""
+        print sent \(chunks.count, privacy: .public) chunks, \(payload.count, privacy: .public) bytes, \
+        mtu \(mtu, privacy: .public)
+        """)
     }
 
     /// One outstanding write at a time. `.withResponse` gives back-pressure; `.withoutResponse`
@@ -322,7 +328,7 @@ extension PrinterTransport {
             let name = peripheral.name ?? remembered?.name ?? "Printer"
             let service = writeChar.service?.uuid.uuidString ?? "-"
             let hasStatus = statusChar != nil
-            log.info("""
+            log.notice("""
             connected \(name, privacy: .public), service \(service, privacy: .public), \
             mtu \(mtu, privacy: .public), status \(hasStatus, privacy: .public)
             """)
