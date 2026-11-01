@@ -19,12 +19,13 @@ public struct ImportPreview: Hashable, Sendable {
 @MainActor
 public final class CatalogueImporter {
     private let products: any ProductRepository
-    private let stock: any StockRepository
     private let transactor: Transactor
+    private var context: ModelContext {
+        transactor.context
+    }
 
-    public init(products: any ProductRepository, stock: any StockRepository, transactor: Transactor) {
+    public init(products: any ProductRepository, transactor: Transactor) {
         self.products = products
-        self.stock = stock
         self.transactor = transactor
     }
 
@@ -48,46 +49,79 @@ public final class CatalogueImporter {
 
     /// Added rows take their stock from the file as a `stock_in` movement. Updated rows never touch
     /// stock: it is a counter, and counters move through movements (SPEC §5.5).
+    ///
+    /// The store is read once, before the first insert. A fetch against a context that holds the
+    /// batch's unsaved inserts costs time in proportion to them, so looking each row up as it went
+    /// made the commit quadratic: 4,000 rows took about 100 s. The checks are the repositories'
+    /// own (a taken SKU, a taken barcode, a missing product) and throw the same errors, so anything
+    /// that changed between preview and commit still rolls the whole batch back.
     public func commit(_ preview: ImportPreview, now: Date) throws {
         try transactor.perform {
+            var index = try Index(context)
             for row in preview.added {
-                try add(row, now: now)
+                try add(row, now: now, index: &index)
             }
             for row in preview.updated {
-                try update(row, now: now)
+                try update(row, now: now, index: &index)
             }
         }
     }
 
-    private func add(_ row: CatalogueRow, now: Date) throws {
+    /// What the store held when the commit began, kept current as the batch inserts.
+    private struct Index {
+        var products: [String: Product]
+        /// Barcode value to the SKU that owns it.
+        var barcodes: [String: String]
+
+        init(_ context: ModelContext) throws {
+            products = try Dictionary(
+                context.fetch(FetchDescriptor<Product>()).map { ($0.sku, $0) }, uniquingKeysWith: { first, _ in first }
+            )
+            barcodes = try Dictionary(
+                context.fetch(FetchDescriptor<Barcode>()).map { ($0.value, $0.product?.sku ?? "") },
+                uniquingKeysWith: { first, _ in first }
+            )
+        }
+    }
+
+    private func add(_ row: CatalogueRow, now: Date, index: inout Index) throws {
+        guard index.products[row.sku] == nil else { throw CoreError.skuTaken(row.sku) }
         let product = Product(
             sku: row.sku, name: row.name, unit: row.unit, cost: row.cost, price: row.price,
             tracksStock: row.tracksStock, updatedAt: now
         )
-        try products.create(product)
-        try addBarcodes(row.barcodes, to: row.sku)
+        context.insert(product)
+        index.products[row.sku] = product
+        try addBarcodes(row.barcodes, to: product, index: &index)
         if row.stockOnHand != 0 {
-            try stock.adjust(sku: row.sku, delta: row.stockOnHand, reason: .stockIn, occurredAt: now)
+            product.stockOnHand += row.stockOnHand
+            context.insert(StockMovement(
+                productSKU: row.sku, delta: row.stockOnHand, reason: .stockIn, occurredAt: now, saleID: nil
+            ))
         }
     }
 
-    private func update(_ row: CatalogueRow, now: Date) throws {
-        let product = try transactor.context.requireProduct(sku: row.sku)
+    private func update(_ row: CatalogueRow, now: Date, index: inout Index) throws {
+        guard let product = index.products[row.sku] else { throw CoreError.productNotFound(sku: row.sku) }
         product.name = row.name
         product.unit = row.unit
         product.cost = row.cost
         product.price = row.price
         product.tracksStock = row.tracksStock
         try products.update(product, updatedAt: now)
-        let existing = Set(product.barcodes.map(\.value))
-        try addBarcodes(row.barcodes.filter { !existing.contains($0) }, to: row.sku)
+        try addBarcodes(row.barcodes.filter { index.barcodes[$0] != row.sku }, to: product, index: &index)
     }
 
-    private func addBarcodes(_ values: [String], to sku: String) throws {
+    private func addBarcodes(_ values: [String], to product: Product, index: inout Index) throws {
         for value in values {
+            if let owner = index.barcodes[value] {
+                throw CoreError.barcodeTaken(value: value, existingSKU: owner)
+            }
             // The parser already rejected bad check digits, so inference cannot fail here.
-            let symbology = Symbology.inferred(from: value) ?? .code128
-            try products.addBarcode(value, symbology: symbology, to: sku)
+            let barcode = Barcode(value: value, symbology: Symbology.inferred(from: value) ?? .code128)
+            context.insert(barcode)
+            barcode.product = product
+            index.barcodes[value] = product.sku
         }
     }
 

@@ -22,7 +22,7 @@
             }
             let text = try String(contentsOf: url, encoding: .utf8)
             let importer = CatalogueImporter(
-                products: dependencies.products, stock: dependencies.stock, transactor: dependencies.transactor
+                products: dependencies.products, transactor: dependencies.transactor
             )
             let preview = try importer.preview(CatalogueCSV.parse(text))
             try importer.commit(preview, now: now)

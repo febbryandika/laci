@@ -19,7 +19,7 @@ struct CatalogueImporterTests {
         let transactor = Transactor(container: store.container)
         products = SwiftDataProductRepository(transactor: transactor)
         stock = SwiftDataStockRepository(transactor: transactor)
-        importer = CatalogueImporter(products: products, stock: stock, transactor: transactor)
+        importer = CatalogueImporter(products: products, transactor: transactor)
     }
 
     func preview(_ body: String) throws -> ImportPreview {
@@ -103,6 +103,53 @@ struct CatalogueImporterTests {
         let fresh = ModelContext(store.container)
         #expect(try fresh.fetchCount(FetchDescriptor<Product>()) == 1)
         #expect(try fresh.fetchCount(FetchDescriptor<StockMovement>()) == 0)
+    }
+
+    @Test("An SKU created between preview and commit rolls the whole batch back")
+    func skuTakenAfterPreview() throws {
+        let preview = try preview("""
+        A,One,pcs,1,2,true,5,
+        B,Two,pcs,1,2,true,5,
+        """)
+        try products.create(makeProduct("B"))
+
+        #expect(throws: CoreError.skuTaken("B")) {
+            try importer.commit(preview, now: epoch)
+        }
+        let fresh = ModelContext(store.container)
+        #expect(try fresh.fetchCount(FetchDescriptor<Product>()) == 1)
+        #expect(try fresh.fetchCount(FetchDescriptor<StockMovement>()) == 0)
+    }
+
+    @Test("An updated row cannot take a barcode that another product owns")
+    func updatedRowBarcodeTaken() throws {
+        try products.create(makeProduct("A"))
+        let preview = try preview("A,One,pcs,1,2,true,0,96385074")
+        try products.create(makeProduct("OWNER"))
+        try products.addBarcode("96385074", symbology: .ean8, to: "OWNER")
+
+        #expect(throws: CoreError.barcodeTaken(value: "96385074", existingSKU: "OWNER")) {
+            try importer.commit(preview, now: epoch)
+        }
+        #expect(try products.product(sku: "A")?.barcodes.isEmpty == true)
+    }
+
+    @Test("A product removed between preview and commit fails its update and rolls back")
+    func updatedRowMissing() throws {
+        try products.create(makeProduct("A"))
+        let preview = try preview("""
+        NEW,New,pcs,1,2,true,3,
+        A,Renamed,pcs,1,2,true,0,
+        """)
+        let context = ModelContext(store.container)
+        try context.delete(model: Product.self, where: #Predicate { $0.sku == "A" })
+        try context.save()
+
+        #expect(throws: CoreError.productNotFound(sku: "A")) {
+            try importer.commit(preview, now: epoch)
+        }
+        let fresh = ModelContext(store.container)
+        #expect(try fresh.fetchCount(FetchDescriptor<Product>()) == 0)
     }
 
     @Test("Export then re-import previews as all updated with nothing rejected")

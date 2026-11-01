@@ -46,7 +46,7 @@ final class CatalogueImportViewModel {
         now: @escaping () -> Date = { Date() }
     ) {
         importer = CatalogueImporter(
-            products: dependencies.products, stock: dependencies.stock, transactor: dependencies.transactor
+            products: dependencies.products, transactor: dependencies.transactor
         )
         self.delimiter = delimiter
         self.now = now
