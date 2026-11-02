@@ -135,9 +135,9 @@ public final class CatalogueImporter {
     }
 }
 
+@MainActor
 public extension CatalogueRow {
     /// A stored product as an export row. `line` is 0: the row did not come from a file.
-    @MainActor
     init(_ product: Product) {
         self.init(
             line: 0, sku: product.sku, name: product.name, unit: product.unit, cost: product.cost,
