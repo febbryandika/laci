@@ -57,6 +57,11 @@ enum UITestApp {
     static let fixtureBarcode = "8991128170404"
     static let fixtureName = "Indomie Goreng 85g"
 
+    /// A typed Return that swaps one sheet for another: the keystrokes, the dismissal and the next
+    /// presentation all have to land, and a CI runner has been seen to stall the simulator for over
+    /// ten seconds in the middle of that. The form does appear; five seconds was too tight to see it.
+    static let sheetSwapTimeout: TimeInterval = 15
+
     @MainActor
     static var isPad: Bool {
         UIDevice.current.userInterfaceIdiom == .pad
