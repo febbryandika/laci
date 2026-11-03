@@ -10,14 +10,14 @@ final class OwnerGateTests: XCTestCase {
     }
 
     @MainActor
-    private func launchLocked() -> XCUIApplication {
-        UITestApp.launch(UITestApp.Options(enforcesLock: true))
+    private func launchLocked(graceSeconds: Int? = nil) -> XCUIApplication {
+        UITestApp.launch(UITestApp.Options(enforcesLock: true, lockGraceSeconds: graceSeconds))
     }
 
     /// Sets the first PIN through Settings and returns to the sell screen, which locks again.
     @MainActor
-    private func launchWithPIN() -> XCUIApplication {
-        let app = launchLocked()
+    private func launchWithPIN(graceSeconds: Int? = nil) -> XCUIApplication {
+        let app = launchLocked(graceSeconds: graceSeconds)
         push(app, "SellView.settings", title: "Pengaturan")
         createPIN(app, pin)
         XCTAssertTrue(app.buttons["SettingsView.export"].waitForExistence(timeout: 5))
@@ -80,10 +80,30 @@ final class OwnerGateTests: XCTestCase {
         XCTAssertTrue(app.secureTextFields["PINFlowView.field"].waitForExistence(timeout: 5))
     }
 
-    /// Going to the background pops the owner screen, including one pushed on top of it.
+    /// Coming back inside the grace period keeps the screen and what was typed into it: a quick
+    /// look at WhatsApp must not cost a stocktake or a typed count.
     @MainActor
-    func testBackgroundLocksEvenFromAScreenPushedOnTop() {
+    func testReturningInsideTheGracePeriodKeepsTheScreenAndItsContents() {
         let app = launchWithPIN()
+        push(app, "SellView.closeOut", title: "Tutup kas")
+        enterPIN(app, pin)
+        let counted = app.textFields["CloseOutView.counted"]
+        XCTAssertTrue(counted.waitForExistence(timeout: 5))
+        counted.tap()
+        counted.typeText("3500")
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 10))
+        app.activate()
+        XCTAssertTrue(counted.waitForExistence(timeout: 10))
+        XCTAssertEqual(counted.value as? String, "3500")
+        XCTAssertFalse(app.secureTextFields["PINFlowView.field"].exists)
+    }
+
+    /// Past the grace period the owner screen is gone, including one pushed on top of it. The grace
+    /// is zero here, because the real minute is too long to wait out; `OwnerRelockTests` covers it.
+    @MainActor
+    func testReturningAfterTheGracePeriodLocksEvenFromAScreenPushedOnTop() {
+        let app = launchWithPIN(graceSeconds: 0)
         push(app, "SellView.settings", title: "Pengaturan")
         enterPIN(app, pin)
         let export = app.buttons["SettingsView.export"]

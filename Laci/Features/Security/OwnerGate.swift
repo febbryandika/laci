@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The door in front of an owner screen (SPEC §15). Nothing of the screen is built until it opens,
 /// and it opens per push: the state dies with the navigation entry, so leaving is locking.
-/// `SellView` pops these entries when the app goes to the background.
+/// `SellView` pops these entries when the app comes back after the grace period (`OwnerRelock`).
 struct OwnerGate<Content: View>: View {
     private let title: LocalizedStringKey
     private let content: () -> Content

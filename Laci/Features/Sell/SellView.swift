@@ -15,14 +15,19 @@ struct SellView: View {
     @FocusState private var focus: SellField?
     @State private var wedgeEnabled = false
     @State private var isVisible = false
+    @State private var relock: OwnerRelock
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
 
-    init(dependencies: Dependencies, unlock: UnlockStore) {
+    init(
+        dependencies: Dependencies, unlock: UnlockStore,
+        ownerGracePeriod: Duration = OwnerRelock.defaultGracePeriod
+    ) {
         self.dependencies = dependencies
         self.unlock = unlock
+        _relock = State(initialValue: OwnerRelock(gracePeriod: ownerGracePeriod))
         _viewModel = State(initialValue: SellViewModel(dependencies: dependencies, unlock: unlock))
     }
 
@@ -69,13 +74,7 @@ struct SellView: View {
                         focusWedge()
                     }
                 }
-                // `.background`, not `.inactive`: the Face ID prompt itself makes the scene inactive.
-                // Popping relocks, whichever screen was pushed on top of the owner screen.
-                .onChange(of: scenePhase) {
-                    if scenePhase == .background, path.contains(where: \.isOwnerOnly) {
-                        path.removeAll()
-                    }
-                }
+                .onChange(of: scenePhase) { scenePhaseChanged() }
         }
     }
 
@@ -265,6 +264,18 @@ private extension SellView {
         WedgeField(focus: $focus, field: .wedge, identifier: "SellView.wedge") {
             viewModel.didRead(code: $0, symbology: nil)
         }
+    }
+
+    /// `.background`, not `.inactive`: the Face ID prompt itself makes the scene inactive. Checked on
+    /// the way back, so a screen left inside the grace period keeps what was typed into it. Popping
+    /// relocks, whichever screen was pushed on top of the owner screen, and with no animation so
+    /// the owner screen does not slide away in plain sight.
+    func scenePhaseChanged() {
+        guard scenePhase != .background else { return relock.didEnterBackground() }
+        guard relock.shouldRelockOnReturn(), path.contains(where: \.isOwnerOnly) else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { path.removeAll() }
     }
 
     /// Only while this screen is showing with no sheet up, so a pushed or presented screen's own

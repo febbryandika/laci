@@ -9,6 +9,7 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
     static let offlineKey = "LACI_OFFLINE"
     static let consentKey = "LACI_UI_CONSENT"
     static let lockKey = "LACI_UI_LOCK"
+    static let lockGraceKey = "LACI_UI_LOCK_GRACE"
 
     /// An in-memory store instead of the on-disk one, with the settings wiped first.
     let isUITesting: Bool
@@ -20,6 +21,8 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
     let asksConsent: Bool
     /// A UI test that wants the owner PIN, held in memory; every other UI test walks through.
     let enforcesLock: Bool
+    /// A UI test that cannot wait out the real grace period; nil keeps the real one.
+    let lockGraceSeconds: Int?
 
     init(environment: [String: String] = ProcessInfo.processInfo.environment) {
         #if DEBUG
@@ -28,12 +31,14 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
             isOffline = environment[Self.offlineKey] == "1"
             asksConsent = environment[Self.consentKey] == "1"
             enforcesLock = environment[Self.lockKey] == "1"
+            lockGraceSeconds = environment[Self.lockGraceKey].flatMap(Int.init)
         #else
             isUITesting = false
             loadsFixture = false
             isOffline = false
             asksConsent = false
             enforcesLock = false
+            lockGraceSeconds = nil
         #endif
     }
 

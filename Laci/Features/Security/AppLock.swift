@@ -27,17 +27,21 @@ final class AppLock {
     private(set) var status: Status
     /// False only for a UI test that did not ask for the lock. Release is always true.
     let isEnforced: Bool
+    /// How long an open owner screen survives the app being in the background.
+    let gracePeriod: Duration
     private let store: any PINStoring
     private let biometrics: any BiometricAuthenticating
     private let log = Log.store
 
     init(
         store: any PINStoring = KeychainPINStore(), biometrics: any BiometricAuthenticating = SystemBiometrics(),
-        isEnforced: Bool = true, defaults: UserDefaults = .standard
+        isEnforced: Bool = true, gracePeriod: Duration = OwnerRelock.defaultGracePeriod,
+        defaults: UserDefaults = .standard
     ) {
         self.store = store
         self.biometrics = biometrics
         self.isEnforced = isEnforced
+        self.gracePeriod = gracePeriod
         Self.clearPINFromAnEarlierInstall(store: store, defaults: defaults)
         status = Self.currentStatus(of: store)
     }

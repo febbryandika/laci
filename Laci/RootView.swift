@@ -7,7 +7,7 @@ struct RootView: View {
     @State private var consentShown = false
 
     var body: some View {
-        SellView(dependencies: session.dependencies, unlock: session.unlock)
+        SellView(dependencies: session.dependencies, unlock: session.unlock, ownerGracePeriod: session.lock.gracePeriod)
             .id(session.generation)
             .sheet(isPresented: $consentShown) { CrashConsentView(consent: session.crashConsent) }
             .onAppear { consentShown = session.crashConsent.shouldAsk(launch: .current) }

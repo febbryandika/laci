@@ -126,7 +126,8 @@ final class AppSession {
                     backups: scratchBackups(in: scratch, offline: launch.isOffline),
                     unlock: UnlockStore(simulatesOffline: launch.isOffline),
                     lock: AppLock(
-                        store: InMemoryPINStore(), biometrics: NoBiometrics(), isEnforced: launch.enforcesLock
+                        store: InMemoryPINStore(), biometrics: NoBiometrics(), isEnforced: launch.enforcesLock,
+                        gracePeriod: launch.lockGraceSeconds.map { .seconds($0) } ?? OwnerRelock.defaultGracePeriod
                     )
                 )
                 if launch.loadsFixture {

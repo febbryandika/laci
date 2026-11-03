@@ -49,6 +49,8 @@ enum UITestApp {
         var language: Language = .indonesian
         /// The owner PIN enforced, held in memory and empty at launch. Off, the gate walks through.
         var enforcesLock = false
+        /// Replaces the owner screens' grace period, which is too long for a test to wait out.
+        var lockGraceSeconds: Int?
     }
 
     /// `UIContentSizeCategory.accessibilityExtraExtraExtraLarge`: SPEC §9 names it by its long form,
@@ -81,6 +83,9 @@ enum UITestApp {
         }
         if options.enforcesLock {
             app.launchEnvironment["LACI_UI_LOCK"] = "1"
+        }
+        if let grace = options.lockGraceSeconds {
+            app.launchEnvironment["LACI_UI_LOCK_GRACE"] = String(grace)
         }
         if let limit = options.trialLimit {
             app.launchEnvironment["LACI_TRIAL_SALE_LIMIT"] = String(limit)
