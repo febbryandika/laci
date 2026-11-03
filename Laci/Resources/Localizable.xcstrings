@@ -960,6 +960,38 @@
         }
       }
     },
+    "Buat PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを作成"
+          }
+        }
+      }
+    },
+    "Buat PIN baru 6 angka": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a new 6-digit PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい6桁のPINを作成"
+          }
+        }
+      }
+    },
     "Bug": {
       "localizations": {
         "en": {
@@ -1020,6 +1052,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "設定を開く"
+          }
+        }
+      }
+    },
+    "Buka layar khusus pemilik.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the owner's screens."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーナー専用画面を開きます。"
           }
         }
       }
@@ -1696,6 +1744,22 @@
         }
       }
     },
+    "Ekspor dulu, lalu hapus dan pasang lagi Laci. Menghapus Laci menghapus semua data di iPad ini.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export first, then delete and reinstall Laci. Deleting Laci also deletes all its data on this iPad."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先に書き出してから、Laciを削除して再インストールしてください。Laciを削除すると、このiPad上のデータもすべて削除されます。"
+          }
+        }
+      }
+    },
     "Gagal disimpan, coba lagi": {
       "localizations": {
         "en": {
@@ -1868,6 +1932,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべてのデータをこのバックアップで置き換えますか？"
+          }
+        }
+      }
+    },
+    "Gunakan Face ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Face ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face IDを使用"
+          }
+        }
+      }
+    },
+    "Gunakan PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを使用"
+          }
+        }
+      }
+    },
+    "Gunakan Touch ID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Touch ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch IDを使用"
           }
         }
       }
@@ -2672,6 +2784,22 @@
         }
       }
     },
+    "Keamanan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セキュリティ"
+          }
+        }
+      }
+    },
     "Kembali": {
       "localizations": {
         "en": {
@@ -3032,6 +3160,38 @@
         }
       }
     },
+    "Lupa PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを忘れた場合"
+          }
+        }
+      }
+    },
+    "Lupa PIN?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot PIN?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを忘れた場合"
+          }
+        }
+      }
+    },
     "Lupakan printer": {
       "localizations": {
         "en": {
@@ -3126,6 +3286,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "お試し期間が終了しました。会計ボタンまたは設定からLaciを購入してください。"
+          }
+        }
+      }
+    },
+    "Masukkan PIN 6 angka": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the 6-digit PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6桁のPINを入力"
           }
         }
       }
@@ -3306,6 +3482,22 @@
         }
       }
     },
+    "Mulai lagi dengan PIN baru": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start again with a new PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいPINでやり直す"
+          }
+        }
+      }
+    },
     "Nama": {
       "localizations": {
         "en": {
@@ -3478,6 +3670,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "操作ミス"
+          }
+        }
+      }
+    },
+    "PIN gagal disimpan. Coba lagi.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN could not be saved. Try again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを保存できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "PIN melindungi tutup kas, pengaturan, katalog, dan stok opname. Menjual tidak perlu PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN protects close-out, settings, the catalogue and stocktake. Selling needs no PIN."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINはレジ締め、設定、カタログ、棚卸しを保護します。販売にPINは不要です。"
+          }
+        }
+      }
+    },
+    "PIN salah. Coba lagi.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong PIN. Try again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINが違います。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "PIN sudah diperbarui.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN has been updated."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを更新しました。"
+          }
+        }
+      }
+    },
+    "PIN tidak bisa dibaca di iPad ini. Coba tutup dan buka lagi Laci.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN can't be read on this iPad. Try closing and reopening Laci."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPadではPINを読み取れません。Laciを閉じて開き直してください。"
+          }
+        }
+      }
+    },
+    "PIN tidak bisa dipulihkan, karena tidak disimpan di mana pun selain iPad ini.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN can't be recovered, because it is kept nowhere but this iPad."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINはこのiPad以外には保存されていないため、復元できません。"
+          }
+        }
+      }
+    },
+    "PIN tidak sama. Ulangi dari awal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PINs don't match. Start again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINが一致しません。最初からやり直してください。"
           }
         }
       }
@@ -4250,6 +4554,38 @@
         }
       }
     },
+    "Reset PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINをリセット"
+          }
+        }
+      }
+    },
+    "Reset menghapus PIN. Layar pemilik berikutnya akan meminta PIN baru.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset removes the PIN. The next owner screen will ask for a new one."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リセットするとPINが削除されます。次にオーナー専用画面を開くときに新しいPINを作成します。"
+          }
+        }
+      }
+    },
     "Retur": {
       "localizations": {
         "en": {
@@ -4634,6 +4970,22 @@
         }
       }
     },
+    "Semua data penjualan tetap bisa diekspor tanpa PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All sales data can still be exported without the PIN."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "売上データはPINなしですべて書き出せます。"
+          }
+        }
+      }
+    },
     "Semua penjualan, stok, dan tutup kas setelah %@ akan hilang dan tidak bisa dikembalikan.": {
       "localizations": {
         "en": {
@@ -4662,6 +5014,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ライト"
+          }
+        }
+      }
+    },
+    "Setelah itu, buat PIN baru dan pulihkan data dari cadangan iCloud di Pengaturan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then create a new PIN and restore your data from the iCloud backup in Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その後、新しいPINを作成し、設定からiCloudバックアップのデータを復元してください。"
           }
         }
       }
@@ -5602,6 +5970,22 @@
         }
       }
     },
+    "Ubah PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PINを変更"
+          }
+        }
+      }
+    },
     "Ubah baris": {
       "localizations": {
         "en": {
@@ -5678,6 +6062,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "ファイルサイズ"
+          }
+        }
+      }
+    },
+    "Ulangi PIN baru": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat the new PIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいPINをもう一度入力"
           }
         }
       }

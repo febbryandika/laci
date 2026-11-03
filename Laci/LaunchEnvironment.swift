@@ -8,6 +8,7 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
     static let emptyKey = "LACI_UI_EMPTY"
     static let offlineKey = "LACI_OFFLINE"
     static let consentKey = "LACI_UI_CONSENT"
+    static let lockKey = "LACI_UI_LOCK"
 
     /// An in-memory store instead of the on-disk one, with the settings wiped first.
     let isUITesting: Bool
@@ -17,6 +18,8 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
     let isOffline: Bool
     /// A UI test that wants the crash-reporting consent screen; every other UI test skips it.
     let asksConsent: Bool
+    /// A UI test that wants the owner PIN, held in memory; every other UI test walks through.
+    let enforcesLock: Bool
 
     init(environment: [String: String] = ProcessInfo.processInfo.environment) {
         #if DEBUG
@@ -24,11 +27,13 @@ nonisolated struct LaunchEnvironment: Hashable, Sendable {
             loadsFixture = isUITesting && environment[Self.emptyKey] != "1"
             isOffline = environment[Self.offlineKey] == "1"
             asksConsent = environment[Self.consentKey] == "1"
+            enforcesLock = environment[Self.lockKey] == "1"
         #else
             isUITesting = false
             loadsFixture = false
             isOffline = false
             asksConsent = false
+            enforcesLock = false
         #endif
     }
 

@@ -47,6 +47,8 @@ enum UITestApp {
         /// UI language and device locale together, so money and dates are checked against a
         /// device that would format them differently.
         var language: Language = .indonesian
+        /// The owner PIN enforced, held in memory and empty at launch. Off, the gate walks through.
+        var enforcesLock = false
     }
 
     /// `UIContentSizeCategory.accessibilityExtraExtraExtraLarge`: SPEC §9 names it by its long form,
@@ -76,6 +78,9 @@ enum UITestApp {
         }
         if options.offline {
             app.launchEnvironment["LACI_OFFLINE"] = "1"
+        }
+        if options.enforcesLock {
+            app.launchEnvironment["LACI_UI_LOCK"] = "1"
         }
         if let limit = options.trialLimit {
             app.launchEnvironment["LACI_TRIAL_SALE_LIMIT"] = String(limit)
@@ -209,10 +214,32 @@ extension XCTestCase {
         XCTAssertTrue(app.navigationBars[language.payTitle].waitForNonExistence(timeout: 5))
     }
 
+    /// Types one six-digit entry into the PIN field. The field empties when the entry is taken, so
+    /// waiting for the next prompt or screen is the caller's.
+    @MainActor
+    func enterPIN(_ app: XCUIApplication, _ pin: String) {
+        let field = app.secureTextFields["PINFlowView.field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText(pin)
+    }
+
+    /// The first PIN on a store with none: asked for twice.
+    @MainActor
+    func createPIN(_ app: XCUIApplication, _ pin: String) {
+        XCTAssertTrue(element(app, "PINFlowView.prompt.new").waitForExistence(timeout: 5))
+        enterPIN(app, pin)
+        XCTAssertTrue(element(app, "PINFlowView.prompt.confirm").waitForExistence(timeout: 5))
+        enterPIN(app, pin)
+    }
+
     /// The first close-out of a fresh store: the opening float is asked for.
     @MainActor
-    func openCloseOut(_ app: XCUIApplication, openingFloat: String, counted: String) {
+    func openCloseOut(_ app: XCUIApplication, openingFloat: String, counted: String, createsPIN pin: String? = nil) {
         push(app, "SellView.closeOut", title: "Tutup kas")
+        if let pin {
+            createPIN(app, pin)
+        }
         let opening = app.textFields["CloseOutView.openingFloat"]
         XCTAssertTrue(opening.waitForExistence(timeout: 5))
         opening.tap()

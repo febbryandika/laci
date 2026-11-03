@@ -3,8 +3,8 @@ import LaciCore
 import LaciPrint
 import SwiftUI
 
-/// Printer pairing, paper width, the test print, and the diagnostics SPEC §14 asks for. Shop
-/// identity, PIN and export settings arrive in later phases.
+/// Printer pairing, paper width, the test print, the owner PIN, and the diagnostics SPEC §14 asks
+/// for. Shop identity arrives in a later phase.
 struct SettingsView: View {
     private let dependencies: Dependencies
     private var printer: PrinterCoordinator {
@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var semicolonDelimiter = ExportSettings.semicolonDelimiter()
     @State private var committedSales = 0
     @State private var paywallShown = false
+    @State private var pinChanged = false
     #if DEBUG
         @State private var languageOverride = LanguageSettings.override()
     #endif
@@ -32,6 +33,7 @@ struct SettingsView: View {
             exportSection
             backupSection
             purchaseSection
+            securitySection
             diagnosticsSection
             #if DEBUG
                 languageSection
@@ -179,6 +181,37 @@ struct SettingsView: View {
         case .finished: "Cadangan tersimpan."
         case let .failed(error): BackupErrorText.label(error)
         }
+    }
+
+    /// SPEC §15: changing and resetting both start from the current PIN.
+    private var securitySection: some View {
+        Section {
+            switch session.lock.status {
+            case .set:
+                pinLink("Ubah PIN", flow: .change, identifier: "SettingsView.changePIN")
+                pinLink("Reset PIN", flow: .reset, identifier: "SettingsView.resetPIN")
+            case .noPIN:
+                pinLink("Buat PIN", flow: .setup, identifier: "SettingsView.createPIN")
+            case .unreadable:
+                Text("PIN tidak bisa dibaca di iPad ini. Coba tutup dan buka lagi Laci.")
+            }
+        } header: {
+            Text("Keamanan")
+        } footer: {
+            if pinChanged {
+                Text("PIN sudah diperbarui.")
+                    .accessibilityIdentifier("SettingsView.pinChanged")
+            } else {
+                Text("PIN melindungi tutup kas, pengaturan, katalog, dan stok opname. Menjual tidak perlu PIN.")
+            }
+        }
+    }
+
+    private func pinLink(_ title: LocalizedStringKey, flow: PINFlow, identifier: String) -> some View {
+        NavigationLink(title) {
+            PINFlowScreen(title: title, flow: flow, lock: session.lock) { pinChanged = true }
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     /// SPEC §14: the WhatsApp support screen and "Bagikan log".

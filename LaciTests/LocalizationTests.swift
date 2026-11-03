@@ -122,6 +122,7 @@ struct LocalizationTests {
         let table = try #require(NSDictionary(contentsOf: url) as? [String: String])
         #expect(table["NSCameraUsageDescription"]?.isEmpty == false)
         #expect(table["NSBluetoothAlwaysUsageDescription"]?.isEmpty == false)
+        #expect(table["NSFaceIDUsageDescription"]?.isEmpty == false)
     }
 
     @Test("Money in a sentence is the shop's format whatever the UI language")

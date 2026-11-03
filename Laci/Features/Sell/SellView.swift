@@ -18,6 +18,7 @@ struct SellView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.scenePhase) private var scenePhase
 
     init(dependencies: Dependencies, unlock: UnlockStore) {
         self.dependencies = dependencies
@@ -66,6 +67,13 @@ struct SellView: View {
                         // same code trigger it again.
                         viewModel.clearPendingBarcode()
                         focusWedge()
+                    }
+                }
+                // `.background`, not `.inactive`: the Face ID prompt itself makes the scene inactive.
+                // Popping relocks, whichever screen was pushed on top of the owner screen.
+                .onChange(of: scenePhase) {
+                    if scenePhase == .background, path.contains(where: \.isOwnerOnly) {
+                        path.removeAll()
                     }
                 }
         }
@@ -187,11 +195,11 @@ struct SellView: View {
     @ViewBuilder
     private func destination(_ route: SellRoute) -> some View {
         switch route {
-        case .closeOut: CloseOutView(dependencies: dependencies)
+        case .closeOut: OwnerGate(title: "Tutup kas") { CloseOutView(dependencies: dependencies) }
         case .history: SalesHistoryView(dependencies: dependencies)
-        case .stocktake: StocktakeView(dependencies: dependencies)
-        case .settings: SettingsView(dependencies: dependencies)
-        case .catalogue: CatalogueView(dependencies: dependencies)
+        case .stocktake: OwnerGate(title: "Stok opname") { StocktakeView(dependencies: dependencies) }
+        case .settings: OwnerGate(title: "Pengaturan") { SettingsView(dependencies: dependencies) }
+        case .catalogue: OwnerGate(title: "Katalog") { CatalogueView(dependencies: dependencies) }
         }
     }
 
