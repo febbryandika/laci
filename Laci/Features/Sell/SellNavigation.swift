@@ -32,6 +32,15 @@ enum SellRoute: Hashable {
     case stocktake
     case settings
     case catalogue
+
+    /// Behind the owner PIN (SPEC §15): these show margins or change the shop. History stays open,
+    /// because reprinting a receipt is part of selling and it carries no cost.
+    var isOwnerOnly: Bool {
+        switch self {
+        case .closeOut, .stocktake, .settings, .catalogue: true
+        case .history: false
+        }
+    }
 }
 
 /// What can hold keyboard focus on the sell screen (SPEC §9).

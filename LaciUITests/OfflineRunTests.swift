@@ -38,6 +38,29 @@ final class OfflineRunTests: XCTestCase {
         app.buttons["PaywallView.close"].tap()
     }
 
+    /// SPEC §11, §15: the whole day with no connection and the owner PIN in force. Selling asks for
+    /// no PIN, the drawer reconciles to the rupiah, and the next sale still goes through.
+    @MainActor
+    func testFullSellCheckoutCloseOutFlowInAirplaneMode() {
+        let app = UITestApp.launch(UITestApp.Options(offline: true, enforcesLock: true))
+        ringUpFixtureSale(app)
+        XCTAssertFalse(app.secureTextFields["PINFlowView.field"].exists)
+
+        openCloseOut(app, openingFloat: "0", counted: "3500", createsPIN: "123456")
+        tap(app.buttons["CloseOutView.confirm"], "confirm")
+        let save = app.buttons["CloseOutView.save"]
+        scrollTo(app, save)
+        save.tap()
+        let attribution = element(app, "CloseOutDetailView.attribution")
+        XCTAssertTrue(attribution.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Kas seharusnya, 3.500 rupiah"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Selisih, 0 rupiah"].exists)
+        app.navigationBars.buttons.firstMatch.tap()
+
+        XCTAssertTrue(app.buttons["SellView.closeOut"].waitForExistence(timeout: 5))
+        ringUpFixtureSale(app)
+    }
+
     /// SPEC §3.4: after the trial only checkout is blocked, with the price, restore and the
     /// sentence that the rest stays open.
     @MainActor

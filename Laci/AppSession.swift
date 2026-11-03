@@ -22,16 +22,19 @@ final class AppSession {
     let unlock: UnlockStore
     /// The crash-reporting consent (SPEC §5.4), here for the same reason as `unlock`.
     let crashConsent: CrashConsent
+    /// The owner PIN (SPEC §15). It is not in the store, so a restore neither brings nor drops one.
+    let lock: AppLock
     private let log = Log.store
 
     init(
         dependencies: Dependencies, backups: BackupService, unlock: UnlockStore = UnlockStore(),
-        crashConsent: CrashConsent = CrashConsent()
+        crashConsent: CrashConsent = CrashConsent(), lock: AppLock? = nil
     ) {
         self.dependencies = dependencies
         self.backups = backups
         self.unlock = unlock
         self.crashConsent = crashConsent
+        self.lock = lock ?? AppLock()
     }
 
     /// The destructive restore (SPEC §5.3), in the order that keeps a store open at every step:
@@ -104,7 +107,10 @@ final class AppSession {
     /// In-memory dependencies and a backup service pointed at a throwaway folder, for previews.
     static func inMemory() throws -> AppSession {
         let scratch = scratchFolder()
-        return try AppSession(dependencies: .inMemory(), backups: scratchBackups(in: scratch, offline: false))
+        return try AppSession(
+            dependencies: .inMemory(), backups: scratchBackups(in: scratch, offline: false),
+            lock: AppLock(store: InMemoryPINStore(), biometrics: NoBiometrics())
+        )
     }
 
     #if DEBUG
@@ -118,7 +124,11 @@ final class AppSession {
                 let session = try AppSession(
                     dependencies: .onDisk(at: scratch.appending(path: "Laci.store")),
                     backups: scratchBackups(in: scratch, offline: launch.isOffline),
-                    unlock: UnlockStore(simulatesOffline: launch.isOffline)
+                    unlock: UnlockStore(simulatesOffline: launch.isOffline),
+                    lock: AppLock(
+                        store: InMemoryPINStore(), biometrics: NoBiometrics(), isEnforced: launch.enforcesLock,
+                        gracePeriod: launch.lockGraceSeconds.map { .seconds($0) } ?? OwnerRelock.defaultGracePeriod
+                    )
                 )
                 if launch.loadsFixture {
                     _ = try DebugFixtures.loadWarung200(into: session.dependencies)

@@ -49,6 +49,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: bash scripts/assert-crash-reporting.sh
 
+  required-reason-apis:
+    name: Privacy manifest declares every required-reason API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/assert-required-reason-apis.sh
+
   lint:
     name: SwiftLint + SwiftFormat
     runs-on: macos-26

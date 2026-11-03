@@ -48,6 +48,30 @@
           }
         }
       }
+    },
+    "NSFaceIDUsageDescription" : {
+      "comment" : "Permission alert. Written for a shop owner: what Face ID is for, and that Laci keeps no face data.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To open the owner's screens without typing the PIN. Laci never stores or sends face data."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untuk membuka layar khusus pemilik tanpa mengetik PIN. Data wajah tidak pernah disimpan atau dikirim oleh Laci."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PINを入力せずにオーナー専用画面を開くためです。Laciが顔データを保存または送信することはありません。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

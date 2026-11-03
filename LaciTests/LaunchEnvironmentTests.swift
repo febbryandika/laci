@@ -12,6 +12,17 @@ struct LaunchEnvironmentTests {
         #expect(!launch.isOffline)
     }
 
+    @Test("The grace period override is read in debug builds only, and nothing set keeps the real one")
+    func lockGrace() {
+        #expect(LaunchEnvironment(environment: [:]).lockGraceSeconds == nil)
+        let overridden = LaunchEnvironment(environment: [LaunchEnvironment.lockGraceKey: "0"])
+        #if DEBUG
+            #expect(overridden.lockGraceSeconds == 0)
+        #else
+            #expect(overridden.lockGraceSeconds == nil)
+        #endif
+    }
+
     @Test("UI testing loads the fixture unless the empty key is set")
     func uiTesting() {
         let seeded = LaunchEnvironment(environment: [LaunchEnvironment.uiTestingKey: "1"])

@@ -132,6 +132,11 @@ final class LaunchTests: XCTestCase {
         let confirm = app.buttons["RestoreConfirmView.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         XCTAssertFalse(confirm.isEnabled)
+        // SPEC §15: said before anything moves.
+        XCTAssertEqual(
+            app.staticTexts["RestoreConfirmView.stolenWarning"].label,
+            "Cadangan dari iPad yang dicuri bisa dibaca oleh siapa pun yang memegang Apple ID ini."
+        )
         let name = app.textFields["RestoreConfirmView.shopName"]
         name.tap()
         name.typeText("Warun")

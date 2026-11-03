@@ -12,3 +12,4 @@ ENABLE_USER_SCRIPT_SANDBOXING = NO
 // keys are build settings, so this needs no project-file change.
 INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = Untuk mencetak struk ke printer Bluetooth. Tidak ada data lain yang dikirim.
 INFOPLIST_KEY_NSCameraUsageDescription = Untuk memindai barcode produk. Foto tidak pernah disimpan atau dikirim.
+INFOPLIST_KEY_NSFaceIDUsageDescription = Untuk membuka layar khusus pemilik tanpa mengetik PIN. Data wajah tidak pernah disimpan atau dikirim oleh Laci.
