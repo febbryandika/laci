@@ -181,29 +181,13 @@ struct SettingsView: View {
         }
     }
 
+    /// SPEC §14: the WhatsApp support screen and "Bagikan log".
     private var diagnosticsSection: some View {
-        Section("Diagnostik") {
-            LabeledContent("MTU") {
-                if let mtu = printer.negotiatedMTU {
-                    Text("\(mtu) byte")
-                } else {
-                    Text(verbatim: "—")
-                }
+        Section {
+            NavigationLink("Diagnostik") {
+                DiagnosticsView()
             }
-            LabeledContent("Cetak terakhir") {
-                if let outcomeLabel {
-                    Text(outcomeLabel)
-                } else {
-                    Text(verbatim: "—")
-                }
-            }
-            LabeledContent("Durasi") {
-                Text(printer.lastDuration.map {
-                    $0.formatted(.units(allowed: [.seconds, .milliseconds], width: .narrow))
-                } ?? "—")
-            }
-            LabeledContent("Ukuran berkas") { Text(storeSizeLabel) }
-            LabeledContent("Skema") { Text(BackupService.schemaVersion) }
+            .accessibilityIdentifier("SettingsView.diagnostics")
         }
     }
 
@@ -228,12 +212,6 @@ struct SettingsView: View {
         }
     #endif
 
-    private var storeSizeLabel: String {
-        let store = session.backups.storeURL
-        guard let size = try? store.resourceValues(forKeys: [.fileSizeKey]).fileSize else { return "—" }
-        return ByteCountFormatStyle().format(Int64(size))
-    }
-
     private var paperWidth: Binding<PaperWidth> {
         Binding(get: { printer.paperWidth }, set: { printer.setPaperWidth($0) })
     }
@@ -245,14 +223,6 @@ struct SettingsView: View {
         case .disconnected: "Tidak terhubung"
         case .connecting: "Menghubungkan…"
         case let .connected(name, _): "Terhubung: \(name)"
-        }
-    }
-
-    private var outcomeLabel: LocalizedStringResource? {
-        switch printer.lastOutcome {
-        case nil: nil
-        case .printed: "Berhasil"
-        case let .failed(error): "Gagal: \(String(localized: PrintErrorText.label(error)))"
         }
     }
 }

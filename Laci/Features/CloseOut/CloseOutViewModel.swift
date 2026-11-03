@@ -2,6 +2,7 @@ import Foundation
 import LaciCore
 import LaciMoney
 import Observation
+import os
 
 /// Why a close-out step was refused. The view owns the wording.
 enum CloseOutError: Hashable {
@@ -110,11 +111,17 @@ final class CloseOutViewModel {
         let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return fail(.noteRequired) }
         let payout = Payout(tradingDay: targetDay, kind: kind, amount: amount, note: trimmed, occurredAt: now())
-        perform { try closeOuts.addPayout(payout) }
+        perform {
+            try closeOuts.addPayout(payout)
+            Log.closeout.notice("payout added, kind \(String(describing: kind), privacy: .public)")
+        }
     }
 
     func deletePayout(_ payout: Payout) {
-        perform { try closeOuts.deletePayout(payout) }
+        perform {
+            try closeOuts.deletePayout(payout)
+            Log.closeout.notice("payout deleted")
+        }
     }
 
     // MARK: Save
@@ -152,7 +159,15 @@ final class CloseOutViewModel {
             discrepancy: result.discrepancy.amount, note: trimmedNote.isEmpty ? nil : trimmedNote,
             closedAt: now(), attribution: nil
         )
-        perform { try closeOuts.save(row, cashRemoved: cashRemoved) }
+        let overThreshold = result.discrepancy.amount.magnitude > threshold.amount
+        perform {
+            try closeOuts.save(row, cashRemoved: cashRemoved)
+            // Shapes public, figures private: support needs "was it short", never the amount.
+            Log.closeout.notice("""
+            closed day, short \(result.isShort, privacy: .public), over threshold \(overThreshold, privacy: .public), \
+            discrepancy \(result.discrepancy.amount, privacy: .private), setoran \(cashRemoved > 0, privacy: .public)
+            """)
+        }
     }
 
     func clearError() {
@@ -184,8 +199,10 @@ final class CloseOutViewModel {
             try write()
             error = nil
         } catch let failure as CoreError {
+            Log.closeout.error("close-out write refused: \(String(describing: failure), privacy: .public)")
             error = Self.map(failure)
         } catch {
+            Log.closeout.error("close-out write failed: \(String(describing: error), privacy: .public)")
             self.error = .failed
         }
         changeCount()

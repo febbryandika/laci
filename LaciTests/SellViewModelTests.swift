@@ -341,4 +341,14 @@ struct SellViewModelPrintingTests {
         #expect(await until { dependencies.printer.lastOutcome == .printed })
         #expect(transport.payloads.first?.range(of: Data("No. \(sale.number)".utf8)) != nil)
     }
+
+    @Test("Checkout hands its signpost interval to the printer, which closes it on the last chunk")
+    func checkoutIntervalReachesPrinter() throws {
+        let sell = try makeSell(.hang)
+        let (viewModel, dependencies) = (sell.viewModel, sell.dependencies)
+        let product = try dependencies.products.product(sku: "A")
+        try viewModel.add(#require(product))
+        viewModel.checkoutCash(tendered: Money(20000))
+        #expect(dependencies.printer.openCheckoutIntervals == 1)
+    }
 }

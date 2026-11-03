@@ -1,6 +1,7 @@
 import Foundation
 import LaciCore
 import LaciMoney
+import SwiftData
 import SwiftUI
 
 /// The close-out (SPEC §3.3): one centred column, count first. The disclosure is disabled and has

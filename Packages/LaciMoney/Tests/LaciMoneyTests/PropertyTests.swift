@@ -1,7 +1,6 @@
-@testable import LaciMoney
-
 // swiftlint:disable identifier_name
 import Foundation
+@testable import LaciMoney
 import Testing
 
 struct Seeded: RandomNumberGenerator {

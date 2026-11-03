@@ -55,7 +55,7 @@ final class StocktakeViewModel: ScanReceiving {
     private let products: any ProductRepository
     private let stock: any StockRepository
     private let now: () -> Date
-    private let log = Logger(subsystem: "id.laci", category: "stocktake")
+    private let log = Log.store
 
     init(dependencies: Dependencies, now: @escaping () -> Date = { Date() }) {
         products = dependencies.products
@@ -104,7 +104,7 @@ final class StocktakeViewModel: ScanReceiving {
                 count(product)
             } else {
                 scanNotice = .unknownProduct
-                log.info("stocktake unknown \(code, privacy: .private)")
+                log.notice("stocktake unknown \(code, privacy: .private)")
             }
         }
     }
@@ -172,7 +172,7 @@ final class StocktakeViewModel: ScanReceiving {
             return false
         }
         let counted = rows.count
-        log.info("stocktake applied \(adjustments.count, privacy: .public) of \(counted, privacy: .public)")
+        log.notice("stocktake applied \(adjustments.count, privacy: .public) of \(counted, privacy: .public)")
         appliedCount = adjustments.count
         rows = []
         error = nil

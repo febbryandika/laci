@@ -3,6 +3,7 @@ import Foundation
 import LaciCore
 import LaciMoney
 import LaciPrint
+import os
 import Testing
 
 private let fixedNow = Date(timeIntervalSince1970: 1_800_000_000)
@@ -123,6 +124,43 @@ struct PrinterCoordinatorTests {
         #expect(await until { fixture.printer.lastOutcome == .printed })
         #expect(fixture.transport.payloads == [DiagnosticReceipt.render(paper: .mm80)])
         #expect(PrinterSettings.paperWidth(in: fixture.defaults) == .mm80)
+    }
+
+    @Test("The checkout interval ends when the printer answers, whether it printed or failed", arguments: [
+        FakePrinterTransport.Mode.succeed, .fail(.paperOut),
+    ])
+    func checkoutIntervalEnds(mode: FakePrinterTransport.Mode) async throws {
+        let fixture = try PrinterFixture(mode: mode)
+        let sale = try fixture.sale()
+        let interval = Log.signposter.beginInterval(PrinterCoordinator.checkoutInterval)
+        fixture.printer.printReceipt(for: sale, checkout: interval)
+        #expect(fixture.printer.openCheckoutIntervals == 1)
+        #expect(await until { fixture.printer.lastOutcome != nil })
+        #expect(fixture.printer.openCheckoutIntervals == 0)
+    }
+
+    @Test("A hanging printer keeps the checkout interval open")
+    func checkoutIntervalHangs() async throws {
+        let fixture = try PrinterFixture(mode: .hang)
+        let sale = try fixture.sale()
+        let interval = Log.signposter.beginInterval(PrinterCoordinator.checkoutInterval)
+        fixture.printer.printReceipt(for: sale, checkout: interval)
+        #expect(await until(.milliseconds(100)) { fixture.printer.openCheckoutIntervals == 0 } == false)
+    }
+
+    @Test("The last print survives a relaunch")
+    func lastPrintPersists() async throws {
+        let fixture = try PrinterFixture(mode: .fail(.paperOut))
+        let sale = try fixture.sale()
+        fixture.printer.printReceipt(for: sale)
+        #expect(await until { fixture.printer.lastOutcome != nil })
+        let relaunched = PrinterCoordinator(
+            transport: fixture.transport, sales: fixture.dependencies.sales, products: fixture.dependencies.products,
+            defaults: fixture.defaults, now: { fixedNow }
+        )
+        #expect(relaunched.lastOutcome == .failed(.paperOut))
+        #expect(relaunched.lastDuration != nil)
+        #expect(relaunched.lastPrintedAt == fixedNow)
     }
 
     @Test("A hanging printer leaves the print in flight and the caller free")

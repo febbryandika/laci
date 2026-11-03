@@ -21,7 +21,7 @@ actor ScannerSession {
 
     private let metadataQueue = DispatchQueue(label: "id.laci.capture-metadata")
     private let receiver: MetadataReceiver
-    private let log = Logger(subsystem: "id.laci", category: "scan")
+    private let log = Log.scan
     private var device: AVCaptureDevice?
     private var output: AVCaptureMetadataOutput?
     private var isConfigured = false

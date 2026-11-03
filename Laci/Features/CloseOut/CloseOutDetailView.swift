@@ -1,5 +1,6 @@
 import Foundation
 import LaciCore
+import SwiftData
 import SwiftUI
 
 /// A saved close-out, read straight from the row: `discrepancy` is the published number (SPEC §10)

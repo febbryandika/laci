@@ -47,7 +47,7 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(entry.exists)
         entry.tap()
         entry.typeText(code + "\n")
-        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: UITestApp.sheetSwapTimeout))
         XCTAssertEqual(app.textFields["NewProductView.sku"].value as? String, code)
         let name = app.textFields["NewProductView.name"]
         name.tap()
@@ -68,7 +68,7 @@ final class LaunchTests: XCTestCase {
         let entry = openScannerSheet(app)
         entry.tap()
         entry.typeText(code + "\n")
-        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: UITestApp.sheetSwapTimeout))
         let name = app.textFields["NewProductView.name"]
         name.tap()
         name.typeText("Produk Hitung")
@@ -160,7 +160,7 @@ final class LaunchTests: XCTestCase {
         let code = unknownCode()
         // No tap: the hidden field is focused by the screen, which is what a wedge relies on.
         app.typeText(code + "\n")
-        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Produk baru"].waitForExistence(timeout: UITestApp.sheetSwapTimeout))
         XCTAssertEqual(app.textFields["NewProductView.sku"].value as? String, code)
         app.buttons["NewProductView.cancel"].tap()
     }

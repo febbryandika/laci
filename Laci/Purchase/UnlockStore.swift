@@ -23,7 +23,7 @@ final class UnlockStore: UnlockGating {
     // Not tracked: a task handle is not UI state, and only a stored (not computed) Sendable
     // property may be read from the nonisolated deinit below.
     @ObservationIgnored private var updates: Task<Void, Never>?
-    private let log = Logger(subsystem: "id.laci", category: "purchase")
+    private let log = Log.sale
     /// DEBUG-only (`LaunchEnvironment`): the airplane-mode UI run wants the price load to fail the
     /// way it does with no connection. The entitlement itself is local and needs no network.
     private let simulatesOffline: Bool

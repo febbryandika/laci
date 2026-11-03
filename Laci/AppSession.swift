@@ -20,12 +20,18 @@ final class AppSession {
     /// Here and not in `Dependencies`: a restore rebuilds those, and the `Transaction.updates`
     /// listener must outlive the store (SPEC §5.1).
     let unlock: UnlockStore
-    private let log = Logger(subsystem: "id.laci", category: "store")
+    /// The crash-reporting consent (SPEC §5.4), here for the same reason as `unlock`.
+    let crashConsent: CrashConsent
+    private let log = Log.store
 
-    init(dependencies: Dependencies, backups: BackupService, unlock: UnlockStore = UnlockStore()) {
+    init(
+        dependencies: Dependencies, backups: BackupService, unlock: UnlockStore = UnlockStore(),
+        crashConsent: CrashConsent = CrashConsent()
+    ) {
         self.dependencies = dependencies
         self.backups = backups
         self.unlock = unlock
+        self.crashConsent = crashConsent
     }
 
     /// The destructive restore (SPEC §5.3), in the order that keeps a store open at every step:
@@ -56,7 +62,7 @@ final class AppSession {
             }
             generation += 1
             restoreNotice = .succeeded(name: archive.name)
-            log.info("restored \(archive.name, privacy: .public)")
+            log.notice("restored \(archive.name, privacy: .public)")
             return true
         } catch let error as BackupError {
             restoreNotice = .failed(error)

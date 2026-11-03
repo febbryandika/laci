@@ -1,6 +1,7 @@
 import Foundation
 import LaciCore
 import Observation
+import os
 
 /// Why a void or refund was refused. The view owns the wording.
 enum CorrectionError: Hashable {
@@ -64,14 +65,21 @@ final class SaleDetailViewModel {
             error = .reasonRequired
             return
         }
-        perform { try sales.void(saleID: saleID, reason: trimmed, occurredAt: now()) }
+        let number = sale?.number ?? 0
+        perform {
+            try sales.void(saleID: saleID, reason: trimmed, occurredAt: now())
+            Log.sale.notice("sale #\(number, privacy: .public) voided")
+        }
     }
 
     func refund() {
+        let number = sale?.number ?? 0
         perform {
-            lastRefund = try sales.refund(
+            let refund = try sales.refund(
                 saleID: saleID, occurredAt: now(), tradingDay: ShopDefaults.tradingDay, timeZone: ShopDefaults.timeZone
             )
+            lastRefund = refund
+            Log.sale.notice("sale #\(number, privacy: .public) refunded as #\(refund.number, privacy: .public)")
         }
     }
 
@@ -84,8 +92,10 @@ final class SaleDetailViewModel {
             try correction()
             error = nil
         } catch let failure as CoreError {
+            Log.sale.error("correction refused: \(String(describing: failure), privacy: .public)")
             error = Self.map(failure)
         } catch {
+            Log.sale.error("correction failed: \(String(describing: error), privacy: .public)")
             self.error = .failed
         }
         load()
