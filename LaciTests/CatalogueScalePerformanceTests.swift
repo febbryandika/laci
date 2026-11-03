@@ -1,20 +1,14 @@
 import Foundation
 @testable import Laci
 import LaciCore
-import SwiftData
 import XCTest
 
 /// SPEC §11: the 200-SKU fixture scaled ×20, measured on the paths a shop at that size would feel —
 /// the import, the scan-to-cart path the `scan-to-cart` signpost wraps, and loading and searching
 /// the catalogue on the sell screen. XCTest because `measure` is XCTest's; no baselines are set,
 /// so the numbers are reported, not asserted (a baseline would be per-device, inside the project).
-///
-/// The import is opt-in: at 4,000 rows it takes about 100 s a run on the simulator (one fetch per
-/// row against a context holding every unsaved insert), which is a finding, not a CI budget.
-/// `TEST_RUNNER_LACI_PERF=1 xcodebuild test … -only-testing:LaciTests/CatalogueScalePerformanceTests`.
 final class CatalogueScalePerformanceTests: XCTestCase {
     private static let copies = 20
-    private static let environment = ProcessInfo.processInfo.environment
 
     /// The fixture's rows, copied `copies` times with suffixed SKUs and fresh EAN-13s in the
     /// in-store `29` range, so every copy passes the checksum gate and no barcode collides.
@@ -46,34 +40,18 @@ final class CatalogueScalePerformanceTests: XCTestCase {
     @MainActor
     private func importScaled(_ rows: [CatalogueRow], into dependencies: Dependencies) throws {
         let importer = CatalogueImporter(
-            products: dependencies.products, stock: dependencies.stock, transactor: dependencies.transactor
+            products: dependencies.products, transactor: dependencies.transactor
         )
         let preview = try importer.preview(CatalogueCSV.Parsed(rows: rows, rejected: []))
         XCTAssertEqual(preview.rejected, [])
         try importer.commit(preview, now: Date(timeIntervalSince1970: 1_800_000_000))
     }
 
-    /// The scaled catalogue inserted directly and saved once: these tests measure reading it, and
-    /// going through the importer would spend minutes before the first measurement.
     @MainActor
     private func seededCatalogue() throws -> (Dependencies, [CatalogueRow]) {
         let rows = try scaledRows()
         let dependencies = try Dependencies.inMemory()
-        let context = dependencies.transactor.context
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        for row in rows {
-            let product = Product(
-                sku: row.sku, name: row.name, unit: row.unit, cost: row.cost, price: row.price,
-                tracksStock: row.tracksStock, updatedAt: now
-            )
-            context.insert(product)
-            for value in row.barcodes {
-                let barcode = Barcode(value: value, symbology: .ean13)
-                context.insert(barcode)
-                barcode.product = product
-            }
-        }
-        try context.save()
+        try importScaled(rows, into: dependencies)
         XCTAssertEqual(try dependencies.products.all(includeArchived: false).count, 200 * Self.copies)
         return (dependencies, rows)
     }
@@ -87,7 +65,6 @@ final class CatalogueScalePerformanceTests: XCTestCase {
     /// Preview plus commit of 4,000 rows into an empty store; the store itself is built unmeasured.
     @MainActor
     func testImportAtScale() throws {
-        try XCTSkipUnless(Self.environment["LACI_PERF"] == "1", "set LACI_PERF=1 to measure the import")
         let rows = try scaledRows()
         let options = manual
         options.iterationCount = 3
