@@ -28,6 +28,11 @@ final class RestoreViewModel {
         return "Semua penjualan, stok, dan tutup kas setelah \(since) akan hilang dan tidak bisa dikembalikan."
     }
 
+    /// SPEC §15: the backup has iCloud's encryption and no key of ours on top, so whoever holds the
+    /// Apple ID can read it. A restore is the moment the owner is thinking about that account.
+    static let stolenDeviceWarning: LocalizedStringResource =
+        "Cadangan dari iPad yang dicuri bisa dibaca oleh siapa pun yang memegang Apple ID ini."
+
     @discardableResult
     func confirm(session: AppSession) async -> Bool {
         guard canConfirm else { return false }

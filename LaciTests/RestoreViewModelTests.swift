@@ -46,6 +46,13 @@ struct RestoreViewModelTests {
         #expect(!english.hasPrefix("Semua"))
     }
 
+    @Test("The stolen-iPad warning names the Apple ID in every language", arguments: [
+        ("id", "Apple ID"), ("en", "stolen"), ("ja", "盗まれた"),
+    ])
+    func stolenDeviceWarning(language: String, phrase: String) {
+        #expect(localized(RestoreViewModel.stolenDeviceWarning, in: language).contains(phrase))
+    }
+
     @Test("The expected name defaults to the shop's")
     func expectedNameIsShopName() {
         #expect(RestoreViewModel(archive: archive).expectedName == ShopDefaults.shopName)

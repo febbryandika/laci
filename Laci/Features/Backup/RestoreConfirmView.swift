@@ -24,8 +24,9 @@ struct RestoreConfirmView: View {
                 Text(viewModel.warning)
                     .foregroundStyle(.red)
                     .accessibilityIdentifier("RestoreConfirmView.warning")
-                Text("Cadangan dari iPad yang dicuri bisa dibaca oleh siapa pun yang memegang Apple ID ini.")
-                    .foregroundStyle(.secondary)
+                Text(RestoreViewModel.stolenDeviceWarning)
+                    .fontWeight(.semibold)
+                    .accessibilityIdentifier("RestoreConfirmView.stolenWarning")
             }
             Section {
                 TextField("Ketik nama toko untuk melanjutkan", text: $viewModel.typedName)
@@ -50,7 +51,8 @@ struct RestoreConfirmView: View {
                 Task { await viewModel.confirm(session: session) }
             }
         } message: {
-            Text(viewModel.warning)
+            let warnings = [viewModel.warning, RestoreViewModel.stolenDeviceWarning]
+            Text(verbatim: warnings.map { String(localized: $0) }.joined(separator: "\n\n"))
         }
         .disabled(viewModel.isRestoring)
     }
