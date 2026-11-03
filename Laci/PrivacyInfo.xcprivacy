@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPEC §15, checked row by row against the §5.4 boundary table by LaciTests/PrivacyManifestTests.swift.
+
+  §5.4 row                    In this manifest
+  Apple · StoreKit            Nothing. Apple processes the purchase; there is no server of ours to see it.
+  Apple · iCloud Documents    Nothing. An opt-in file in the shop's own iCloud; we cannot read it.
+  Google · Crashlytics        CrashData and OtherDiagnosticData below: opt-in, not linked, no tracking.
+  Bluetooth printer           Nothing. Local bytes to the shop's own printer.
+  A file the user picked      Nothing. The user's export to the user's chosen place.
+  A recipient the user picked Nothing. A one-off log the user chooses to send, redacted.
+
+  Camera and Bluetooth have no key in this format. They are declared by their usage strings
+  (NSCameraUsageDescription, NSBluetoothAlwaysUsageDescription, set in Config/Shared.xcconfig). No
+  frame is stored or sent, so PhotosorVideos here would overstate.
+
+  Required-reason APIs: UserDefaults only (CA92.1, this app's own settings). No file timestamp, disk
+  space, boot time or active keyboard API is called; scripts/assert-required-reason-apis.sh keeps
+  that true. Crashlytics declares what it uses in its own manifest.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeCrashData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
