@@ -1,0 +1,16 @@
+Laci {{VERSION}}
+
+Yang berubah di versi ini:
+{{CHANGES}}
+
+Mohon pakai untuk transaksi sungguhan, seperti biasa:
+1. Jual: pindai barcode, terima uang, dan periksa kembaliannya.
+2. Struk: cetak ke printer toko. Kalau gagal, penjualan tetap tersimpan; coba Cetak ulang.
+3. Tutup kas: setiap malam, hitung uang di laci dulu, baru lihat angkanya. Catat selisih apa pun.
+4. PIN: buat PIN di layar pemilik. Tanpa PIN, kasir tetap bisa menjual.
+5. Cadangan: nyalakan cadangan iCloud di Pengaturan dan pastikan muncul "Cadangan terakhir".
+
+Kalau ada masalah:
+Kirim pesan WhatsApp ke saya dengan foto layarnya. Dari Pengaturan > Diagnostik, pilih "Bagikan log"; jumlah uang dan nama produk tidak ikut terkirim.
+
+Penting: jangan hapus aplikasi ini. Menghapus Laci menghapus semua data di perangkat ini, kecuali yang sudah ada di cadangan iCloud.

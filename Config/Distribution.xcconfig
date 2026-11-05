@@ -1,0 +1,7 @@
+// Passed to `xcodebuild archive` by the `ship` lane only; local and test builds never read it.
+// Names the profile match installs and holds no secret. The indirection applies the profile to the
+// app target alone: SwiftPM resource bundles get an empty value, as they refuse a profile.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Apple Distribution
+LACI_PROFILE_id_Laci = match AppStore id.Laci
+PROVISIONING_PROFILE_SPECIFIER = $(LACI_PROFILE_$(PRODUCT_BUNDLE_IDENTIFIER:c99extidentifier))

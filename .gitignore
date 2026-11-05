@@ -16,11 +16,21 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
+fastlane/README.md
 
 # Secrets and signing
 *.mobileprovision
 *.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.ipa
+*.dSYM.zip
 .env
+fastlane/.env*
+
+# Bundler
+vendor/
 
 # Local-only docs
 SPEC.md
