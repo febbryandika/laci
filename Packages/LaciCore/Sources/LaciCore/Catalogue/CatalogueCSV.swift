@@ -251,13 +251,11 @@ private struct Tokenizer {
             unquoted(character)
         } else if character == "\"" {
             pendingQuote = true
+        } else if character.isCSVNewline {
+            line += 1
+            field.append("\n")
         } else {
-            if character.isCSVNewline {
-                line += 1
-                field.append("\n")
-            } else {
-                field.append(character)
-            }
+            field.append(character)
         }
     }
 

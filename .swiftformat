@@ -1,4 +1,4 @@
-# SwiftFormat. CI runs `swiftformat --lint .` with the runner's preinstalled SwiftFormat.
+# SwiftFormat. CI runs `swiftformat --lint .` with the version pinned in ci.yml's lint job.
 # Near-default on purpose; the Swift version is pinned so rule selection does not depend
 # on which toolchain or SwiftFormat build is present.
 --swiftversion 6.0

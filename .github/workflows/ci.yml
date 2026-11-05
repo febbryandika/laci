@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # release.yml runs this same matrix before it ships, so the two can never disagree.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -11,8 +13,6 @@ concurrency:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-  HOMEBREW_NO_AUTO_UPDATE: "1"
-  HOMEBREW_NO_INSTALL_CLEANUP: "1"
 
 jobs:
   packages:
@@ -59,10 +59,35 @@ jobs:
   lint:
     name: SwiftLint + SwiftFormat
     runs-on: macos-26
+    env:
+      # Pinned, not the latest: this job gates the release, so a new rule must not block a tag with
+      # no code change. To bump, change a version and its checksum and run it locally first.
+      SWIFTLINT_VERSION: 0.65.1
+      SWIFTLINT_SHA256: c1e429b0599cf1b516f369a2d9ec04eaf0e436f3c12b637df8851fa52ff694d0
+      SWIFTFORMAT_VERSION: 0.64.5
+      SWIFTFORMAT_SHA256: ec017c91fdd46233e5a22dc43ff9564a3cc4b37023d3b4681b6c7d7b781de113
     steps:
       - uses: actions/checkout@v4
-      - run: brew install swiftlint
-      - run: swiftlint version && swiftformat --version
+      - name: Install the pinned SwiftLint
+        run: |
+          mkdir -p "$RUNNER_TEMP/swiftlint"
+          cd "$RUNNER_TEMP/swiftlint"
+          curl -fsSL -o swiftlint.zip \
+            "https://github.com/realm/SwiftLint/releases/download/$SWIFTLINT_VERSION/portable_swiftlint.zip"
+          echo "$SWIFTLINT_SHA256  swiftlint.zip" | shasum -a 256 --check
+          unzip -q swiftlint.zip
+          echo "$PWD" >> "$GITHUB_PATH"
+      - name: Install the pinned SwiftFormat
+        run: |
+          mkdir -p "$RUNNER_TEMP/swiftformat"
+          cd "$RUNNER_TEMP/swiftformat"
+          curl -fsSL -o swiftformat.zip \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/$SWIFTFORMAT_VERSION/swiftformat.zip"
+          echo "$SWIFTFORMAT_SHA256  swiftformat.zip" | shasum -a 256 --check
+          unzip -q swiftformat.zip
+          echo "$PWD" >> "$GITHUB_PATH"
+      - run: test "$(swiftlint version)" = "$SWIFTLINT_VERSION"
+      - run: test "$(swiftformat --version)" = "$SWIFTFORMAT_VERSION"
       - run: swiftformat --lint .
       - run: swiftlint lint --strict
 

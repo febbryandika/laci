@@ -1,0 +1,85 @@
+# SPEC §11, §12: the tag is the only thing that ships. docs/RELEASING.md has the setup.
+default_platform(:ios)
+
+BUNDLE_ID = "id.Laci"
+PROFILE = "match AppStore #{BUNDLE_ID}"
+TESTER_GROUP = "Tiga Toko"
+TAG_PATTERN = /\Av(\d+\.\d+\.\d+)\z/
+# TestFlight refuses a longer "What to Test".
+WHAT_TO_TEST_LIMIT = 4000
+
+# The version is the tag without its "v". Nothing else in the repo states a shipping version.
+def version_from(tag)
+  TAG_PATTERN.match(tag.to_s)&.captures&.first || UI.user_error!("#{tag.inspect} is not a vX.Y.Z tag")
+end
+
+# The tag's own message fills in what changed, so the tag is the build's only input.
+def what_to_test(tag)
+  changes = sh("git", "tag", "-l", "--format=%(contents)", tag, log: false).strip
+  note = File.read("what_to_test.id.txt")
+             .gsub("{{VERSION}}", version_from(tag))
+             .gsub("{{CHANGES}}", changes)
+  UI.user_error!("What to Test is #{note.length} characters, over #{WHAT_TO_TEST_LIMIT}") if note.length > WHAT_TO_TEST_LIMIT
+  note
+end
+
+platform :ios do
+  desc "Prints the What to Test note for a tag. Uploads nothing."
+  lane :preview_what_to_test do |options|
+    UI.message("\n#{what_to_test(options.fetch(:tag))}")
+  end
+
+  # The App Store Connect key exists only in the `testflight` GitHub environment, which is what
+  # really stops a laptop. This guard makes the mistake loud instead of a confusing key error.
+  desc "CI only: archives the tagged commit and sends it to TestFlight."
+  lane :ship do
+    unless ENV["GITHUB_ACTIONS"] == "true" && ENV["GITHUB_REF_TYPE"] == "tag"
+      UI.user_error!("ship runs only from the tag workflow. Push a vX.Y.Z tag; never upload from a laptop.")
+    end
+    tag = ENV.fetch("GITHUB_REF_NAME")
+    version = version_from(tag)
+    build = ENV.fetch("GITHUB_RUN_NUMBER")
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_CONTENT"),
+      is_key_content_base64: true
+    )
+
+    setup_ci
+    match(type: "appstore", readonly: true, api_key: api_key)
+
+    # Overrides on the command line, so the project file stays untouched (CLAUDE.md). Release is
+    # the only configuration that ships: there is no separate beta build.
+    gym(
+      project: "Laci.xcodeproj",
+      scheme: "Laci",
+      configuration: "Release",
+      export_method: "app-store",
+      xcconfig: "Config/Distribution.xcconfig",
+      xcargs: "MARKETING_VERSION=#{version} CURRENT_PROJECT_VERSION=#{build}",
+      export_options: { provisioningProfiles: { BUNDLE_ID => PROFILE } },
+      derived_data_path: "build/DerivedData",
+      output_directory: "build/ship",
+      include_symbols: true
+    )
+
+    # Before the upload: a shop's crash must never reach a build whose symbols were lost.
+    upload_symbols_to_crashlytics(
+      gsp_path: "Laci/GoogleService-Info.plist",
+      binary_path: "build/DerivedData/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols"
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: BUNDLE_ID,
+      changelog: what_to_test(tag),
+      distribute_external: true,
+      groups: [TESTER_GROUP],
+      notify_external_testers: true,
+      uses_non_exempt_encryption: false,
+      wait_processing_timeout_duration: 3600
+    )
+  end
+end

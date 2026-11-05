@@ -1,0 +1,5 @@
+# The encrypted certificates live in a separate private repo. Its URL, the read-only deploy key and
+# the passphrase come from the environment: MATCH_GIT_URL, MATCH_GIT_PRIVATE_KEY, MATCH_PASSWORD.
+storage_mode("git")
+type("appstore")
+app_identifier("id.Laci")
