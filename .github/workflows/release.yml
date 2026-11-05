@@ -1,0 +1,63 @@
+name: Release
+
+# The only way a build reaches TestFlight (SPEC §11). `ship` needs both jobs before it to succeed,
+# with no `if:` to override that, so a failed, cancelled or skipped test job blocks the upload.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  # Fails in seconds on a tag that could never ship, before the 35-minute test matrix.
+  preflight:
+    name: Release preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: bash scripts/assert-release-ready.sh "$GITHUB_REF_NAME"
+
+  tests:
+    name: Full test matrix
+    uses: ./.github/workflows/ci.yml
+
+  ship:
+    name: Ship to TestFlight
+    needs: [preflight, tests]
+    runs-on: macos-26
+    # Holds every secret below and accepts only v* tags, so no branch can read them.
+    environment: testflight
+    timeout-minutes: 120
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_OPT_OUT_USAGE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Pinned to a commit: this job holds the signing secrets, and a tag can be moved.
+      - uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
+        with:
+          bundler-cache: true
+      - name: Restore the Firebase config
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          test -n "$GOOGLE_SERVICE_INFO_PLIST"
+          printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > Laci/GoogleService-Info.plist
+      - name: Archive and upload
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane ship

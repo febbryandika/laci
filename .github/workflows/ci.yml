@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # release.yml runs this same matrix before it ships, so the two can never disagree.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
