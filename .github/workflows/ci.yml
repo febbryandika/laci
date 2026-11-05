@@ -61,10 +61,24 @@ jobs:
   lint:
     name: SwiftLint + SwiftFormat
     runs-on: macos-26
+    env:
+      # Pinned, not the runner's: this job gates the release, so a new SwiftFormat rule must not
+      # block a tag with no code change. To bump, change both lines and run the new version locally.
+      SWIFTFORMAT_VERSION: 0.64.5
+      SWIFTFORMAT_SHA256: ec017c91fdd46233e5a22dc43ff9564a3cc4b37023d3b4681b6c7d7b781de113
     steps:
       - uses: actions/checkout@v4
       - run: brew install swiftlint
-      - run: swiftlint version && swiftformat --version
+      - name: Install the pinned SwiftFormat
+        run: |
+          mkdir -p "$RUNNER_TEMP/swiftformat"
+          cd "$RUNNER_TEMP/swiftformat"
+          curl -fsSL -o swiftformat.zip \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/$SWIFTFORMAT_VERSION/swiftformat.zip"
+          echo "$SWIFTFORMAT_SHA256  swiftformat.zip" | shasum -a 256 --check
+          unzip -q swiftformat.zip
+          echo "$PWD" >> "$GITHUB_PATH"
+      - run: swiftlint version && test "$(swiftformat --version)" = "$SWIFTFORMAT_VERSION"
       - run: swiftformat --lint .
       - run: swiftlint lint --strict
 
